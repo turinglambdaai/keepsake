@@ -13,7 +13,10 @@
           [account? predicate/c]
           [default-root (-> (or/c path-string? #f))]
           [find-accounts (-> (listof account?))]
-          [find-accounts-in (-> path-string? (listof account?))]))
+          [find-accounts-in (-> path-string? (listof account?))]
+          [current-wechat-root (parameter/c (or/c path-string? #f))]))
+;; Overrides the platform default root when set (tests, custom locations).
+(define current-wechat-root (make-parameter #f))
 
 ;; account: (hasheq 'id string 'path string)
 (define (account? v)
@@ -56,5 +59,5 @@
       '()))
 
 (define (find-accounts)
-  (define root (default-root))
+  (define root (or (current-wechat-root) (default-root)))
   (if root (find-accounts-in root) '()))
