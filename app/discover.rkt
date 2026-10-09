@@ -46,17 +46,33 @@
 ;; Account directories under an explicit root. A directory counts as an
 ;; account when it contains a db_storage subdirectory (the WeChat 4.x
 ;; message store); cache clutter never shows up as an account. A root that
-;; does not exist simply yields no accounts.
+;; does not exist simply yields no accounts. A TCC denial (macOS without
+;; Full Disk Access) becomes an actionable error instead of a bare errno.
 (define (find-accounts-in root)
   (define root-path (simple-form-path root))
-  (if (directory-exists? root-path)
-      (for/list ([e (in-list (directory-list root-path))]
-                 #:when (let ([p (build-path root-path e)])
-                          (and (directory-exists? p)
-                               (directory-exists? (build-path p "db_storage")))))
-        (hasheq 'id (path->string e)
-                'path (path->string (build-path root-path e))))
-      '()))
+  (cond
+    [(not (directory-exists? root-path)) '()]
+    [else
+     (define entries
+       (with-handlers
+           ([exn:fail:filesystem?
+             (lambda (e)
+               (if (regexp-match? #rx"Operation not permitted|Permission denied"
+                                  (exn-message e))
+                   (raise-user-error
+                    'find-accounts
+                    (string-append
+                     "macOS blocked access to the WeChat data directory — grant "
+                     "Full Disk Access to this app (System Settings → Privacy & "
+                     "Security → Full Disk Access), then rescan"))
+                   (raise e)))])
+         (directory-list root-path)))
+     (for/list ([e (in-list entries)]
+                #:when (let ([p (build-path root-path e)])
+                         (and (directory-exists? p)
+                              (directory-exists? (build-path p "db_storage")))))
+       (hasheq 'id (path->string e)
+               'path (path->string (build-path root-path e))))]))
 
 (define (find-accounts)
   (define root (or (current-wechat-root) (default-root)))

@@ -3,6 +3,8 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject private var model: AppModel
 
+    @State private var confirmingRestore: SnapshotInfo?
+
     var body: some View {
         NavigationSplitView {
             // Sidebar: WeChat accounts found on this machine.
@@ -34,6 +36,27 @@ struct ContentView: View {
         .safeAreaInset(edge: .bottom) {
             statusBar
         }
+        .confirmationDialog(restoreDialogTitle,
+                            isPresented: restoreDialogBinding,
+                            titleVisibility: .visible) {
+            Button("Restore Snapshot #\(confirmingRestore?.index ?? 0)",
+                   role: .destructive) {
+                Task { await model.restoreSelected() }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("The current directory contents are snapshotted first, so nothing can be lost by going back.")
+        }
+    }
+
+    private var restoreDialogTitle: String {
+        guard let snap = confirmingRestore else { return "Restore snapshot?" }
+        return "Restore \(prettyTime(snap.created_at))?"
+    }
+
+    private var restoreDialogBinding: Binding<Bool> {
+        Binding(get: { confirmingRestore != nil },
+                set: { if !$0 { confirmingRestore = nil } })
     }
 
     /// Snapshot timeline and actions for the selected account.
@@ -64,21 +87,31 @@ struct ContentView: View {
                         .foregroundStyle(.secondary)
                 }
                 ForEach(model.snapshots, id: \.created_at) { snap in
-                    HStack {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundStyle(.green)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(prettyTime(snap.created_at))
-                                .font(.body.weight(.medium))
-                            Text("\(snap.file_count) files · \(snap.total_label)")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                    Button {
+                        confirmingRestore = snap
+                    } label: {
+                        HStack {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundStyle(.green)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(prettyTime(snap.created_at))
+                                    .font(.body.weight(.medium))
+                                    .foregroundStyle(.primary)
+                                Text("\(snap.file_count) files · \(snap.total_label)")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            if snap.index == model.selectedSnapshotIndex {
+                                Text("selected")
+                                    .font(.caption)
+                                    .foregroundStyle(.orange)
+                            }
+                            Image(systemName: "arrow.clockwise.circle")
+                                .foregroundStyle(.tertiary)
                         }
-                        Spacer()
-                        Text("#\(snap.index)")
-                            .font(.caption.monospacedDigit())
-                            .foregroundStyle(.tertiary)
                     }
+                    .buttonStyle(.plain)
                 }
             }
         }
@@ -86,32 +119,52 @@ struct ContentView: View {
     }
 
     private var actions: some View {
-        HStack(spacing: 12) {
-            Button {
-                Task { await model.snapshotNow() }
-            } label: {
-                Label("Snapshot Now", systemImage: "arrow.down.circle.fill")
-            }
-            .buttonStyle(.borderedProminent)
-            .disabled(model.busy)
+        VStack(spacing: 10) {
+            HStack(spacing: 12) {
+                Button {
+                    Task { await model.snapshotNow() }
+                } label: {
+                    Label("Snapshot Now", systemImage: "arrow.down.circle.fill")
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(model.busy)
 
-            Button {
-                Task { await model.restoreLatest() }
-            } label: {
-                Label("Restore Latest", systemImage: "arrow.clockwise.circle")
-            }
-            .buttonStyle(.bordered)
-            .disabled(model.busy)
+                Button {
+                    if let snap = model.selectedSnapshot {
+                        confirmingRestore = snap
+                    }
+                } label: {
+                    Label(model.selectedSnapshotIndex == nil
+                          ? "Select a Snapshot to Restore"
+                          : "Restore #\(model.selectedSnapshotIndex ?? 0)",
+                          systemImage: "arrow.clockwise.circle")
+                }
+                .buttonStyle(.bordered)
+                .disabled(model.busy || model.selectedSnapshotIndex == nil)
 
-            Spacer()
+                Spacer()
 
-            Button {
-                Task { await model.refreshAccounts() }
-            } label: {
-                Image(systemName: "arrow.clockwise")
+                Button {
+                    Task { await model.refreshAccounts() }
+                } label: {
+                    Image(systemName: "arrow.clockwise")
+                }
+                .buttonStyle(.borderless)
+                .help("Rescan account directories")
             }
-            .buttonStyle(.borderless)
-            .help("Rescan account directories")
+
+            Picker("Auto snapshot", selection: Binding(
+                get: { model.autoMinutes },
+                set: { newValue, _ in Task { await model.setAutoMinutes(newValue) } }
+            )) {
+                Text("Off").tag(Int64(0))
+                Text("Every 15 minutes").tag(Int64(15))
+                Text("Every hour").tag(Int64(60))
+                Text("Every 6 hours").tag(Int64(360))
+                Text("Every day").tag(Int64(1440))
+            }
+            .pickerStyle(.menu)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(12)
     }

@@ -113,7 +113,18 @@
 
 (define target (build-path (make-temporary-file "keepsake-rpc-tgt-~a" 'directory)
                            "account"))
-(define restore-result (call-rpc "restore-latest" "wxid_rpc" (path->string target)))
+(define restore-result (call-rpc "restore-snapshot" "wxid_rpc" 1 (path->string target)))
 (check-equal? (first restore-result) #t)
 (check-equal? (file->bytes (build-path target "db_storage" "message" "0.db")) db-bytes)
 (check-equal? (file->string (build-path target "db_storage" "note.txt")) "rpc test")
+
+;; out-of-range index is a handled result, not a wire error
+(define bad-restore (call-rpc "restore-snapshot" "wxid_rpc" 99 (path->string target)))
+(check-equal? (first bad-restore) #f)
+
+;; ---------- auto snapshot settings over the wire ----------
+
+(check-equal? (call-rpc "get-auto-snapshot") 0)
+(check-equal? (call-rpc "set-auto-snapshot" 60) (void))
+(check-equal? (call-rpc "get-auto-snapshot") 60)
+(call-rpc "set-auto-snapshot" 0)

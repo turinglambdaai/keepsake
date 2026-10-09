@@ -16,6 +16,18 @@ starts at 1.0.0 for the first release.
 
 ### Added
 
+- Native macOS shell (SwiftUI over the embedded Racket engine): account
+  sidebar with real sizes, snapshot timeline, snapshot/restore actions with
+  a destructive-action confirmation that explains the pre-restore safety
+  snapshot, and an auto-snapshot interval picker.
+- Auto-snapshot scheduling: the embedded backend snapshots every account on
+  a user-set interval (off / 15m / 1h / 6h / 1d) and pushes a
+  snapshots-changed event so open hosts refresh; the scheduling decision is
+  pure and unit-tested.
+- Restore by snapshot index (`restore-snapshot` replaces the provisional
+  restore-latest RPC).
+- macOS TCC denials surface as an actionable Full Disk Access hint instead
+  of a bare "Operation not permitted".
 - Restore flow: two-phase materialization (pre-flight blob verification
   before the target is touched, written-size checks after), path-safety
   rejection, best-effort mode/mtime restore, and a CLI that always takes an

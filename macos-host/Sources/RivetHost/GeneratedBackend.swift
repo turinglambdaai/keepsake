@@ -48,20 +48,20 @@ public struct SnapshotInfo: Sendable {
     }
 }
 
+private func encode_Int64(_ v: Int64) -> RivetValue { .int64(v) }
 private func encode_String(_ v: String) -> RivetValue { .string(v) }
 private func encode_AccountInfo(_ v: AccountInfo) -> RivetValue { .list([encode_String(v.id), encode_String(v.path), encode_String(v.size_label)]) }
 private func encode__List_AccountInfo_(_ v: [AccountInfo]) -> RivetValue { .list(v.map(encode_AccountInfo)) }
-private func encode_Int64(_ v: Int64) -> RivetValue { .int64(v) }
 private func encode_SnapshotInfo(_ v: SnapshotInfo) -> RivetValue { .list([encode_Int64(v.index), encode_String(v.created_at), encode_String(v.account), encode_Int64(v.file_count), encode_String(v.total_label)]) }
 private func encode__List_SnapshotInfo_(_ v: [SnapshotInfo]) -> RivetValue { .list(v.map(encode_SnapshotInfo)) }
 private func encode_Bool(_ v: Bool) -> RivetValue { .bool(v) }
 private func encode_OperationResult(_ v: OperationResult) -> RivetValue { .list([encode_Bool(v.ok), encode_String(v.message)]) }
 private func encode_Void(_ v: Void) -> RivetValue { .null }
 
+private func decode_Int64(_ v: RivetValue) throws -> Int64 { guard case .int64(let x) = v else { throw RivetGeneratedError.typeMismatch("Int64") }; return x }
 private func decode_String(_ v: RivetValue) throws -> String { guard case .string(let x) = v else { throw RivetGeneratedError.typeMismatch("String") }; return x }
 private func decode_AccountInfo(_ v: RivetValue) throws -> AccountInfo { guard case .list(let xs) = v, xs.count == 3 else { throw RivetGeneratedError.typeMismatch("AccountInfo") }; return AccountInfo(id: try decode_String(xs[0]), path: try decode_String(xs[1]), size_label: try decode_String(xs[2])) }
 private func decode__List_AccountInfo_(_ v: RivetValue) throws -> [AccountInfo] { guard case .list(let xs) = v else { throw RivetGeneratedError.typeMismatch("(List AccountInfo)") }; return try xs.map(decode_AccountInfo) }
-private func decode_Int64(_ v: RivetValue) throws -> Int64 { guard case .int64(let x) = v else { throw RivetGeneratedError.typeMismatch("Int64") }; return x }
 private func decode_SnapshotInfo(_ v: RivetValue) throws -> SnapshotInfo { guard case .list(let xs) = v, xs.count == 5 else { throw RivetGeneratedError.typeMismatch("SnapshotInfo") }; return SnapshotInfo(index: try decode_Int64(xs[0]), created_at: try decode_String(xs[1]), account: try decode_String(xs[2]), file_count: try decode_Int64(xs[3]), total_label: try decode_String(xs[4])) }
 private func decode__List_SnapshotInfo_(_ v: RivetValue) throws -> [SnapshotInfo] { guard case .list(let xs) = v else { throw RivetGeneratedError.typeMismatch("(List SnapshotInfo)") }; return try xs.map(decode_SnapshotInfo) }
 private func decode_Bool(_ v: RivetValue) throws -> Bool { guard case .bool(let x) = v else { throw RivetGeneratedError.typeMismatch("Bool") }; return x }
@@ -70,10 +70,12 @@ private func decode_Void(_ v: RivetValue) throws -> Void { guard case .null = v 
 
 public enum RivetEvent: Sendable {
     case notification(String)
+    case snapshots_changed(String)
 
     public static func decode(name: String, value: RivetValue) throws -> RivetEvent {
         switch name {
         case "notification": return .notification(try decode_String(value))
+        case "snapshots-changed": return .snapshots_changed(try decode_String(value))
         default: throw RivetGeneratedError.unknownEvent(name)
         }
     }
@@ -83,6 +85,10 @@ public struct RivetAPI: Sendable {
     public let client: RivetClient
     public init(client: RivetClient) { self.client = client }
 
+    public func get_auto_snapshot() async throws -> Int64 {
+        let result = try await client.call("get-auto-snapshot", arguments: [])
+        return try decode_Int64(result)
+    }
     public func get_repository_location() async throws -> String {
         let result = try await client.call("get-repository-location", arguments: [])
         return try decode_String(result)
@@ -95,13 +101,17 @@ public struct RivetAPI: Sendable {
         let result = try await client.call("list-snapshots", arguments: [encode_String(account_id)])
         return try decode__List_SnapshotInfo_(result)
     }
-    public func restore_latest(account_id: String, target: String) async throws -> OperationResult {
-        let result = try await client.call("restore-latest", arguments: [encode_String(account_id), encode_String(target)])
+    public func restore_snapshot(account_id: String, index: Int64, target: String) async throws -> OperationResult {
+        let result = try await client.call("restore-snapshot", arguments: [encode_String(account_id), encode_Int64(index), encode_String(target)])
         return try decode_OperationResult(result)
     }
     public func run_snapshot(account_id: String) async throws -> OperationResult {
         let result = try await client.call("run-snapshot", arguments: [encode_String(account_id)])
         return try decode_OperationResult(result)
+    }
+    public func set_auto_snapshot(minutes: Int64) async throws -> Void {
+        let result = try await client.call("set-auto-snapshot", arguments: [encode_Int64(minutes)])
+        return try decode_Void(result)
     }
     public func set_repository_location(path: String) async throws -> Void {
         let result = try await client.call("set-repository-location", arguments: [encode_String(path)])
@@ -109,6 +119,15 @@ public struct RivetAPI: Sendable {
     }
 
     // Shared state
+    public func getAuto_snapshot_minutes() async throws -> Int64 {
+        let result = try await client.getState("auto-snapshot-minutes")
+        return try decode_Int64(result)
+    }
+    @discardableResult
+    public func setAuto_snapshot_minutes(_ value: Int64) async throws -> Int64 {
+        let result = try await client.setState("auto-snapshot-minutes", value: encode_Int64(value))
+        return try decode_Int64(result)
+    }
     public func getRepo_root() async throws -> String {
         let result = try await client.getState("repo-root")
         return try decode_String(result)
