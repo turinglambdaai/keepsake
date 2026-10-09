@@ -16,6 +16,11 @@ starts at 1.0.0 for the first release.
 
 ### Added
 
+- Keepsake Hub, first slice: a self-hosted HTTP facade over the repository
+  directory (same format as local volumes) — blob upload/download, manifest
+  writes, per-device snapshot listings, bearer-token auth, and
+  path-traversal rejection; routing is a pure function under test, with a
+  servlet adapter and a Dockerfile on top.
 - Native macOS shell (SwiftUI over the embedded Racket engine): account
   sidebar with real sizes, snapshot timeline, snapshot/restore actions with
   a destructive-action confirmation that explains the pre-restore safety
