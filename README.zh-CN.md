@@ -32,8 +32,8 @@ Keepsake 接过这份责任，只守一条诚实的规矩：**只处理文件，
 
 早期开发中。Agent CLI 已端到端可用（发现、快照、去重）；1.0 之前格式可能微调。
 
-- [x] M0 核心——发现、切块、内容寻址仓库、manifest
-- [ ] M0 ——恢复流、定时快照
+- [x] M0 核心——发现、切块、内容寻址仓库、manifest、恢复
+- [ ] M0 ——定时快照
 - [ ] M1 ——自托管 hub（Docker）：REST API、多设备时间线、Web UI
 - [ ] M2 ——Windows/Linux agent 加固、hub 发布
 
@@ -47,7 +47,12 @@ racket app/cli.rkt discover                    # 找到微信账号
 racket app/cli.rkt snapshot --repo ~/backup    # 第一次快照
 racket app/cli.rkt snapshot --repo ~/backup    # 再来一次：近乎零上传
 racket app/cli.rkt status --repo ~/backup      # 备份了什么、何时、在哪
+racket app/cli.rkt restore --repo ~/backup --list                  # 挑一个时间点
+racket app/cli.rkt restore --repo ~/backup --account wxid_x \
+      --index 1 --to /path/to/account                              # 回到那一刻
 ```
+
+恢复永远以当前目录的自动保险快照开场——回退不可能让你丢数据。
 
 Keepsake 遵循 [Rivet](https://github.com/turinglambdaai/rivet) 架构：Racket 引擎驱动第一方原生宿主。CLI 是今天的形态；M0 里程碑会加入原生 UI（macOS 用 SwiftUI、Windows 用 WinUI 3、Linux 用 GTK4）和自托管 hub 容器。
 

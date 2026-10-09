@@ -16,6 +16,10 @@ starts at 1.0.0 for the first release.
 
 ### Added
 
+- Restore flow: two-phase materialization (pre-flight blob verification
+  before the target is touched, written-size checks after), path-safety
+  rejection, best-effort mode/mtime restore, and a CLI that always takes an
+  automatic pre-restore safety snapshot of the target directory first.
 - Agent CLI (`racket app/cli.rkt`): `discover`, `snapshot`, `status` —
   locates WeChat account directories on macOS / Windows / Linux, chunks
   files content-addressed (whole-file for media, page-aligned for SQLite

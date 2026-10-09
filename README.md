@@ -57,8 +57,8 @@ exact format; you can reassemble every snapshot with `jq` and `cp`.
 Early development. The agent CLI is functional end-to-end (discover,
 snapshot, dedupe); expect format-adjacent changes until 1.0.
 
-- [x] M0 core — discovery, chunking, content-addressed repository, manifests
-- [ ] M0 — restore flow, scheduled snapshots
+- [x] M0 core — discovery, chunking, content-addressed repository, manifests, restore
+- [ ] M0 — scheduled snapshots
 - [ ] M1 — self-hosted hub (Docker): REST API, multi-device timeline, Web UI
 - [ ] M2 — Windows/Linux agent hardening, hub release
 
@@ -72,7 +72,13 @@ racket app/cli.rkt discover                    # find WeChat accounts
 racket app/cli.rkt snapshot --repo ~/backup    # first snapshot
 racket app/cli.rkt snapshot --repo ~/backup    # again: near-zero upload
 racket app/cli.rkt status --repo ~/backup      # what is backed up, when, where
+racket app/cli.rkt restore --repo ~/backup --list                  # pick a point in time
+racket app/cli.rkt restore --repo ~/backup --account wxid_x \
+      --index 1 --to /path/to/account                              # back to that moment
 ```
+
+Restores always begin with an automatic safety snapshot of the current
+directory, so going back can never cost you data.
 
 Keepsake follows the [Rivet](https://github.com/turinglambdaai/rivet)
 architecture: a Racket engine behind first-party native hosts. The CLI is

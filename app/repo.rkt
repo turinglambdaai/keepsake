@@ -28,6 +28,7 @@
           [repo-open (-> path-string? repo?)]
           [repo-root (-> repo? path-string?)]
           [repo-has-blob? (-> repo? string? boolean?)]
+          [repo-blob-path (-> repo? string? path?)]
           [repo-put-blob! (-> repo? input-port? string?)]
           [repo-write-manifest! (-> repo? manifest? void?)]
           [repo-snapshots (-> repo? string? (listof manifest?))]))
@@ -89,6 +90,10 @@
 
 (define (blob-path root hash)
   (build-path root "blobs" "sha256" (substring hash 0 2) hash))
+
+;; Where a chunk lives inside the repository (restore reads blobs directly).
+(define (repo-blob-path repo hash)
+  (blob-path (repo-root repo) hash))
 
 (define (repo-has-blob? repo hash)
   (file-exists? (blob-path (repo-root repo) hash)))
