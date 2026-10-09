@@ -1,134 +1,183 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Keepsake — a time machine for your desktop WeChat data</title>
-<meta name="description" content="Snapshot, deduplicate, and restore your desktop WeChat data — file-level only, zero decryption. Self-hosted, escapable format.">
+<title>Keepsake — 桌面微信数据的时光机</title>
+<meta name="description" content="Keepsake: 给微信账号目录拍内容寻址的增量快照，任意时点一键恢复。零解密、只碰文件，查看与恢复走微信本体。macOS / Windows / Linux。">
 <link rel="stylesheet" href="styles.css">
 <script>
-  // Apply stored theme before first paint to avoid a flash.
   (function () {
     var t = localStorage.getItem('keepsake-theme');
     if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     document.documentElement.dataset.theme = t;
     var l = localStorage.getItem('keepsake-lang');
-    if (!l) l = (navigator.language || 'en').toLowerCase().startsWith('zh') ? 'zh' : 'en';
+    if (!l) l = (navigator.language || 'zh').toLowerCase().startsWith('zh') ? 'zh' : 'en';
     document.documentElement.lang = l === 'zh' ? 'zh-CN' : 'en';
   })();
 </script>
 </head>
 <body>
-<header class="top">
-  <div class="wordmark">Keepsake</div>
-  <nav>
-    <button class="ghost" id="lang-btn" aria-label="Switch language">中文</button>
-    <button class="ghost" id="theme-btn" aria-label="Toggle theme">◐</button>
-    <a class="ghost" href="https://github.com/turinglambdaai/keepsake" target="_blank" rel="noopener">GitHub ↗</a>
-  </nav>
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="#">Keepsake</a>
+    <nav class="nav-links">
+      <a href="#questions" data-i18n="nav.questions">为什么需要</a>
+      <a href="#principles" data-i18n="nav.principles">设计原则</a>
+      <a href="#start" data-i18n="nav.start">三步开始</a>
+      <a href="#download" data-i18n="nav.download">下载</a>
+      <a href="https://github.com/turinglambdaai/keepsake" data-i18n="nav.github">GitHub</a>
+      <div class="lang-dropdown-wrapper">
+        <button class="lang-btn" type="button" aria-label="Switch language">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+          <span id="current-lang-label">English</span>
+        </button>
+        <ul class="lang-menu">
+          <li onclick="setLanguage('en')">English</li>
+          <li onclick="setLanguage('zh')">简体中文</li>
+        </ul>
+      </div>
+      <button class="theme-btn" id="theme-btn" aria-label="Toggle theme">◐</button>
+    </nav>
+  </div>
 </header>
 
 <main>
   <section class="hero">
-    <p class="kicker" data-i18n="kicker">file-level backup · zero decryption</p>
-    <h1 data-i18n="hero-title">A time machine for your desktop WeChat data.</h1>
+    <p class="kicker" data-i18n="kicker">文件级备份 · 零解密</p>
+    <h1 data-i18n="hero-title">桌面微信数据的时光机。</h1>
     <p class="lede" data-i18n="hero-lede">
-      WeChat keeps no server-side copy of your chats — your local data folder is
-      the only one that exists. Keepsake snapshots it the way macOS snapshots your
-      disk: deduplicated, versioned, restorable. It handles files, never content.
+      微信不在服务器上保存聊天记录——你本地的数据目录就是世上唯一一份。
+      Keepsake 像 macOS 给磁盘拍快照那样给它拍快照：去重、多版本、可恢复。
+      只处理文件，不碰内容。
     </p>
     <div class="cta">
-      <a class="primary" href="https://github.com/turinglambdaai/keepsake" data-i18n="cta-github">View on GitHub</a>
-      <a class="secondary" href="#how" data-i18n="cta-how">How it works</a>
+      <a class="btn btn-primary" href="#download" data-i18n="hero.download">获取 Keepsake</a>
+      <a class="btn btn-secondary" href="https://github.com/turinglambdaai/keepsake" data-i18n="hero.source">查看源码</a>
     </div>
   </section>
 
-  <section class="grid three">
-    <div class="card">
-      <h3 data-i18n="q1-title">Where is my data, how big?</h3>
-      <p data-i18n="q1-body">Keepsake finds every WeChat account directory on the machine and
-      shows what each holds — message databases, images, videos, files — with real sizes.</p>
-    </div>
-    <div class="card">
-      <h3 data-i18n="q2-title">When was it backed up, to where?</h3>
-      <p data-i18n="q2-body">Every snapshot lands on a per-device timeline: when, how big,
-      what changed, and which volume it lives on. No black box, ever.</p>
-    </div>
-    <div class="card">
-      <h3 data-i18n="q3-title">How do I get it back?</h3>
-      <p data-i18n="q3-body">Pick a snapshot, restore it in place — after an automatic safety
-      snapshot of the current data. Verify by opening WeChat itself.</p>
+  <section id="questions" class="section">
+    <h2 data-i18n="questions-title">三个一直没人回答的问题</h2>
+    <div class="grid three">
+      <div class="card">
+        <div class="card-icon">📁</div>
+        <h3 data-i18n="q1-title">数据在哪、有多大？</h3>
+        <p data-i18n="q1-body">Keepsake 找到本机每一个微信账号目录，告诉你各有什么——消息库、图片、视频、文件——和真实大小。</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🕘</div>
+        <h3 data-i18n="q2-title">备份了吗、到哪了？</h3>
+        <p data-i18n="q2-body">每份快照落在按设备划分的时间线上：何时、多大、变了什么、存在哪块盘。永远是明账。</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">↩️</div>
+        <h3 data-i18n="q3-title">怎么找回来？</h3>
+        <p data-i18n="q3-body">选一份快照原位恢复——动手前自动先给当前数据拍一份保险快照。恢复结果打开微信本体验收。</p>
+      </div>
     </div>
   </section>
 
-  <section id="how" class="prose">
-    <h2 data-i18n="principles-title">Design principles</h2>
+  <section id="principles" class="section alt">
+    <h2 data-i18n="principles-title">设计原则</h2>
     <div class="grid two">
       <div class="card">
-        <h3 data-i18n="p1-title">Zero decryption</h3>
-        <p data-i18n="p1-body">No key extraction, no database decryption, no process
-        injection — the line Keepsake never crosses. Viewing and restoring happen
-        through WeChat itself.</p>
+        <h3 data-i18n="p1-title">零解密</h3>
+        <p data-i18n="p1-body">不提取密钥、不解密数据库、不注入进程——这条线永远不碰。查看与恢复都走微信本体。</p>
       </div>
       <div class="card">
-        <h3 data-i18n="p2-title">Escapable format</h3>
-        <p data-i18n="p2-body">A repository is a plain directory of JSON manifests and
-        content-addressed blobs. If Keepsake vanished tomorrow, <code>jq</code> and
-        <code>cp</code> can rebuild any snapshot.</p>
+        <h3 data-i18n="p2-title">可逃生的格式</h3>
+        <p data-i18n="p2-body">仓库就是一个平铺目录：JSON manifest + 内容寻址的 blob。就算项目明天消失，jq 和 cp 也能拼回任何一份快照。</p>
       </div>
       <div class="card">
-        <h3 data-i18n="p3-title">The hub is never a single point</h3>
-        <p data-i18n="p3-body">Agents write the same repository straight to a local volume
-        or NAS mount. A self-hosted hub (Docker) adds scheduling, dedup reports, and a
-        multi-device timeline — nothing depends on it staying up.</p>
+        <h3 data-i18n="p3-title">Hub 永远不是单点</h3>
+        <p data-i18n="p3-body">Agent 可以把同样的仓库直接写到本地卷或 NAS 挂载；自托管 hub（Docker）只增加调度、去重报告和多设备时间线——什么都不依赖它活着。</p>
       </div>
       <div class="card">
-        <h3 data-i18n="p4-title">Restore never destroys</h3>
-        <p data-i18n="p4-body">Every restore begins with an automatic safety snapshot of
-        the current data. Paying is never what keeps your backups alive.</p>
+        <h3 data-i18n="p4-title">恢复永不破坏</h3>
+        <p data-i18n="p4-body">每次恢复都以当前数据的自动保险快照开场。付费从来不是备份活着的前提。</p>
       </div>
     </div>
   </section>
 
-  <section class="prose">
-    <h2 data-i18n="platforms-title">Platforms</h2>
-    <p class="platform-row">
-      <span class="chip ok">macOS</span>
-      <span class="chip ok">Windows</span>
-      <span class="chip ok">Linux</span>
-      <span class="chip" data-i18n="chip-phone">iOS / Android → via WeChat's own migrate flow</span>
-    </p>
-    <p class="muted" data-i18n="platforms-body">
-      Desktop clients keep data in local files — that is Keepsake's whole world.
-      Phones sandbox WeChat beyond reach, so phone history joins the backup through
-      WeChat's built-in migrate-to-desktop step, then gets snapshotted like everything else.
-    </p>
+  <section id="start" class="section">
+    <h2 data-i18n="start-title">三步开始</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div>
+          <h3 data-i18n="s1-title">发现账号</h3>
+          <p data-i18n="s1-body">自动定位本机所有微信账号目录，列出各自的数据构成与真实大小。</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div>
+          <h3 data-i18n="s2-title">拍快照</h3>
+          <p data-i18n="s2-body">媒体整文件去重、消息库按页去重——第一次之后，每次快照近乎零上传。</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div>
+          <h3 data-i18n="s3-title">随时找回</h3>
+          <p data-i18n="s3-body">从时间线选任意时点一键恢复；恢复前自动保险，打开微信即可验收。</p>
+        </div>
+      </div>
+    </div>
   </section>
 
-  <section class="prose">
-    <h2 data-i18n="roadmap-title">Roadmap</h2>
+  <section id="download" class="section alt">
+    <h2 data-i18n="download-title">下载</h2>
+    <div class="dl-grid">
+      <div class="dl-card">
+        <h3 data-i18n="dl-soon-title">早期开发中</h3>
+        <p data-i18n="dl-soon-body">1.0 尚未发布。先从源码构建，或 Watch Releases 等首个安装包：</p>
+        <div class="code">git clone https://github.com/turinglambdaai/keepsake
+cd keepsake && raco pkg install --auto --no-docs crypto
+racket app/cli.rkt discover</div>
+        <a class="btn btn-primary" href="https://github.com/turinglambdaai/keepsake/releases" data-i18n="dl-releases">Releases 页面</a>
+      </div>
+      <div class="dl-card">
+        <h3 data-i18n="dl-platforms-title">平台</h3>
+        <p class="platform-row">
+          <span class="chip ok">macOS</span>
+          <span class="chip ok">Windows</span>
+          <span class="chip ok">Linux</span>
+        </p>
+        <p class="muted" data-i18n="dl-platforms-body">
+          手机端被平台沙盒锁住：手机历史通过微信自带的「迁移到电脑」进入桌面端后，再被快照覆盖。
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2 data-i18n="roadmap-title">路线图</h2>
     <ul>
-      <li><strong>M0</strong> — <span data-i18n="rm0">discover · snapshot · dedupe · repository format v1 · restore flow</span></li>
-      <li><strong>M1</strong> — <span data-i18n="rm1">self-hosted hub (Docker): REST API, multi-device timeline, Web UI</span></li>
-      <li><strong>M2</strong> — <span data-i18n="rm2">Windows / Linux agent hardening, hub release</span></li>
+      <li><strong>M0</strong> — <span data-i18n="rm0">发现 · 快照 · 去重 · 恢复 · 自动快照 · 仓库格式 v1</span></li>
+      <li><strong>M1</strong> — <span data-i18n="rm1">自托管 hub（Docker）：REST、多设备时间线、Web UI</span></li>
+      <li><strong>M2</strong> — <span data-i18n="rm2">Windows / Linux agent 加固、hub 发布</span></li>
     </ul>
   </section>
 </main>
 
 <footer>
   <span>MIT License · <a href="https://github.com/turinglambdaai/keepsake">github.com/turinglambdaai/keepsake</a></span>
-  <span data-i18n="footer-note">Keepsake is an independent tool. It is not affiliated with or endorsed by Tencent. WeChat is a trademark of Tencent.</span>
+  <span data-i18n="footer-note">Keepsake 是独立工具，与腾讯无关、未获其认可。WeChat 是腾讯的商标。</span>
 </footer>
 
 <script>
 (function () {
   var I18N = {
     en: {
+      'nav.questions': 'Why', 'nav.principles': 'Principles', 'nav.start': 'Get started',
+      'nav.download': 'Download', 'nav.github': 'GitHub',
       'kicker': 'file-level backup · zero decryption',
       'hero-title': 'A time machine for your desktop WeChat data.',
       'hero-lede': "WeChat keeps no server-side copy of your chats — your local data folder is the only one that exists. Keepsake snapshots it the way macOS snapshots your disk: deduplicated, versioned, restorable. It handles files, never content.",
-      'cta-github': 'View on GitHub',
-      'cta-how': 'How it works',
+      'hero.download': 'Get Keepsake', 'hero.source': 'View source',
+      'questions-title': 'Three questions nobody answered',
       'q1-title': 'Where is my data, how big?',
       'q1-body': 'Keepsake finds every WeChat account directory on the machine and shows what each holds — message databases, images, videos, files — with real sizes.',
       'q2-title': 'When was it backed up, to where?',
@@ -144,21 +193,33 @@
       'p3-body': 'Agents write the same repository straight to a local volume or NAS mount. A self-hosted hub (Docker) adds scheduling, dedup reports, and a multi-device timeline — nothing depends on it staying up.',
       'p4-title': 'Restore never destroys',
       'p4-body': 'Every restore begins with an automatic safety snapshot of the current data. Paying is never what keeps your backups alive.',
-      'platforms-title': 'Platforms',
-      'chip-phone': 'iOS / Android → via WeChat\u2019s own migrate flow',
-      'platforms-body': 'Desktop clients keep data in local files — that is Keepsake\u2019s whole world. Phones sandbox WeChat beyond reach, so phone history joins the backup through WeChat\u2019s built-in migrate-to-desktop step, then gets snapshotted like everything else.',
+      'start-title': 'Get started in three steps',
+      's1-title': 'Discover accounts',
+      's1-body': 'Automatically locate every WeChat account directory and show what each holds, with real sizes.',
+      's2-title': 'Take snapshots',
+      's2-body': 'Whole-file dedup for media, page-level dedup for message stores — after the first snapshot, every next one is near-zero upload.',
+      's3-title': 'Get anything back',
+      's3-body': 'Pick any point on the timeline and restore in place; an automatic safety snapshot runs first, and WeChat itself verifies the result.',
+      'download-title': 'Download',
+      'dl-soon-title': 'Early development',
+      'dl-soon-body': '1.0 is not out yet. Build from source for now, or watch Releases for the first installer:',
+      'dl-releases': 'Releases page',
+      'dl-platforms-title': 'Platforms',
+      'dl-platforms-body': 'Desktop clients keep data in local files — that is Keepsake\u2019s whole world. Phones sandbox WeChat beyond reach: phone history joins the backup through WeChat\u2019s built-in migrate-to-desktop step, then gets snapshotted like everything else.',
       'roadmap-title': 'Roadmap',
-      'rm0': 'discover · snapshot · dedupe · repository format v1 · restore flow',
-      'rm1': 'self-hosted hub (Docker): REST API, multi-device timeline, Web UI',
+      'rm0': 'discover · snapshot · dedupe · restore · auto-snapshot · repository format v1',
+      'rm1': 'self-hosted hub (Docker): REST, multi-device timeline, Web UI',
       'rm2': 'Windows / Linux agent hardening, hub release',
       'footer-note': 'Keepsake is an independent tool. It is not affiliated with or endorsed by Tencent. WeChat is a trademark of Tencent.'
     },
     zh: {
+      'nav.questions': '为什么需要', 'nav.principles': '设计原则', 'nav.start': '三步开始',
+      'nav.download': '下载', 'nav.github': 'GitHub',
       'kicker': '文件级备份 · 零解密',
       'hero-title': '桌面微信数据的时光机。',
       'hero-lede': '微信不在服务器上保存聊天记录——你本地的数据目录就是世上唯一一份。Keepsake 像 macOS 给磁盘拍快照那样给它拍快照：去重、多版本、可恢复。只处理文件，不碰内容。',
-      'cta-github': '前往 GitHub',
-      'cta-how': '工作原理',
+      'hero.download': '获取 Keepsake', 'hero.source': '查看源码',
+      'questions-title': '三个一直没人回答的问题',
       'q1-title': '数据在哪、有多大？',
       'q1-body': 'Keepsake 找到本机每一个微信账号目录，告诉你各有什么——消息库、图片、视频、文件——和真实大小。',
       'q2-title': '备份了吗、到哪了？',
@@ -174,12 +235,22 @@
       'p3-body': 'Agent 可以把同样的仓库直接写到本地卷或 NAS 挂载；自托管 hub（Docker）只增加调度、去重报告和多设备时间线——什么都不依赖它活着。',
       'p4-title': '恢复永不破坏',
       'p4-body': '每次恢复都以当前数据的自动保险快照开场。付费从来不是备份活着的前提。',
-      'platforms-title': '平台',
-      'chip-phone': 'iOS / Android → 经微信自带迁移进入桌面端',
-      'platforms-body': '桌面版微信的数据在本地文件里——这就是 Keepsake 的全部世界。手机端被沙盒锁住够不着：手机历史通过微信自带的「迁移到电脑」进入桌面端，再被同样地快照。',
+      'start-title': '三步开始',
+      's1-title': '发现账号',
+      's1-body': '自动定位本机所有微信账号目录，列出各自的数据构成与真实大小。',
+      's2-title': '拍快照',
+      's2-body': '媒体整文件去重、消息库按页去重——第一次之后，每次快照近乎零上传。',
+      's3-title': '随时找回',
+      's3-body': '从时间线选任意时点一键恢复；恢复前自动保险，打开微信即可验收。',
+      'download-title': '下载',
+      'dl-soon-title': '早期开发中',
+      'dl-soon-body': '1.0 尚未发布。先从源码构建，或 Watch Releases 等首个安装包：',
+      'dl-releases': 'Releases 页面',
+      'dl-platforms-title': '平台',
+      'dl-platforms-body': '手机端被平台沙盒锁住：手机历史通过微信自带的「迁移到电脑」进入桌面端后，再被快照覆盖。',
       'roadmap-title': '路线图',
-      'rm0': '发现 · 快照 · 去重 · 仓库格式 v1 · 恢复流',
-      'rm1': '自托管 hub（Docker）：REST API、多设备时间线、Web UI',
+      'rm0': '发现 · 快照 · 去重 · 恢复 · 自动快照 · 仓库格式 v1',
+      'rm1': '自托管 hub（Docker）：REST、多设备时间线、Web UI',
       'rm2': 'Windows / Linux agent 加固、hub 发布',
       'footer-note': 'Keepsake 是独立工具，与腾讯无关、未获其认可。WeChat 是腾讯的商标。'
     }
@@ -192,12 +263,15 @@
       var key = el.getAttribute('data-i18n');
       if (dict[key]) el.textContent = dict[key];
     });
-    document.getElementById('lang-btn').textContent = lang === 'zh' ? 'EN' : '中文';
+    document.getElementById('current-lang-label').textContent = lang === 'zh' ? '简体中文' : 'English';
     localStorage.setItem('keepsake-lang', lang);
   }
 
-  document.getElementById('lang-btn').addEventListener('click', function () {
-    setLang(document.documentElement.lang === 'zh-CN' ? 'en' : 'zh');
+  window.setLanguage = setLang;
+
+  document.querySelector('.lang-btn').addEventListener('click', function () {
+    var menu = document.querySelector('.lang-menu');
+    menu.classList.toggle('open');
   });
 
   document.getElementById('theme-btn').addEventListener('click', function () {
