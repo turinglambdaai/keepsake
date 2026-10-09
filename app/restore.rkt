@@ -60,13 +60,11 @@
       (error 'restore-plan "unsafe path in manifest: ~a" rel))
     (for ([ref (in-list (hash-ref f 'chunks))])
       (define h (hash-ref ref 'hash))
-      (define bp (repo-blob-path repo h))
-      (define actual
-        (with-handlers ([exn:fail:filesystem? (lambda (_) #f)])
-          (file-size bp)))
-      (unless actual
+      (unless (repo-has-blob? repo h)
         (error 'restore-plan "missing blob ~a for ~a — repository incomplete" h rel))
-      (unless (= actual (hash-ref ref 'size))
+      ;; fs knows sizes cheaply; hub defers to materialize's per-chunk check
+      (define actual (repo-blob-size repo h))
+      (when (and actual (not (= actual (hash-ref ref 'size))))
         (error 'restore-plan "blob ~a is ~a bytes, manifest says ~a" h actual (hash-ref ref 'size))))
     (list rel (hash-ref f 'size))))
 
@@ -86,9 +84,10 @@
     (call-with-output-file dest
       (lambda (out)
         (for ([ref (in-list (hash-ref f 'chunks))])
-          (call-with-input-file (repo-blob-path repo (hash-ref ref 'hash))
-            (lambda (in) (copy-port in out)))
-          (void)))
+          (define in (repo-read-blob repo (hash-ref ref 'hash)))
+          (copy-port in out)
+          (close-input-port in))
+        (void))
       #:mode 'binary
       #:exists 'truncate)
     ;; Best-effort metadata restore; content is what matters.

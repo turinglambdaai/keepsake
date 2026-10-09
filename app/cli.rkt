@@ -104,7 +104,7 @@ Usage:
   (define devices
     (if (hash-ref flags 'device #f)
         (list (hash-ref flags 'device))
-        (map path->string (directory-list (build-path (repo-root repo) "devices")))))
+        (repo-devices repo)))
   (for ([d (in-list devices)])
     (for ([m (in-list (repo-snapshots repo d))])
       (printf "~a\t~a\t~a\t~a\t~a\n"

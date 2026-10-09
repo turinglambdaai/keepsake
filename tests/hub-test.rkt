@@ -66,7 +66,7 @@
   ;; not JSON
   (check-equal? (first (run "PUT" "/api/devices/dev-hub/snapshots/2026.manifest.json" "Bearer test-token" #"nope")) 400)
   ;; happy path
-  (check-equal? (first (run "PUT" "/api/devices/dev-hub/snapshots/20261009T120000.000Z.manifest.json" "Bearer test-token" body)) 204)
+  (check-equal? (first (run "PUT" "/api/devices/dev-hub/snapshots/20261009T120000.000Z.manifest.json" "Bearer test-token" body)) 200)
   ;; visible in the device listing
   (define snaps (run "GET" "/api/devices/dev-hub/snapshots"))
   (check-equal? (first snaps) 200)

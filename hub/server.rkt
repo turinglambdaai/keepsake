@@ -143,10 +143,22 @@
            (define dir (build-path (simple-form-path repo-root)
                                    "devices" device "snapshots"))
            (make-directory* dir)
-           (with-output-to-file (build-path dir name)
+           ;; Same-millisecond snapshots get a -2/-3 suffix so both survive
+           ;; and still sort next to each other.
+           (define final
+             (let loop ([n 0])
+               (define candidate
+                 (if (zero? n)
+                     name
+                     (string-replace name ".manifest.json"
+                                     (format "-~a.manifest.json" n))))
+               (define p (build-path dir candidate))
+               (if (file-exists? p) (loop (add1 n)) p)))
+           (with-output-to-file final
              #:exists 'truncate
              (lambda () (write-bytes body)))
-           (jsexpr-response 204 (hasheq 'ok #t))])])]
+           (jsexpr-response 200 (hasheq 'ok #t
+                                        'stored (path->string final)))])])]
 
     ;; ---- blobs ----
     [(and (= (length segments) 5)
@@ -158,6 +170,10 @@
      (cond
        [(not (and (valid-hash? hash) (equal? fanout (substring hash 0 2))))
         (jsexpr-response 400 (hasheq 'error "malformed blob path"))]
+       [(equal? method "HEAD")
+        (if (file-exists? (hub-blob-path (simple-form-path repo-root) hash))
+            (list 200 "application/octet-stream" #"")
+            (jsexpr-response 404 (hasheq 'error "no such blob")))]
        [(equal? method "PUT")
         (define dst (hub-blob-path (simple-form-path repo-root) hash))
         (make-directory* (path-only dst))
@@ -212,22 +228,29 @@
       (headers-assq* #"authorization" (request-headers/raw req)))
     (define body
       (or (request-post-data/raw req) #""))
-    (define-values (code type payload)
-      (route repo-root token method raw-path auth-header body))
+    (define result (route repo-root token method raw-path auth-header body))
+    (define code (first result))
+    (define type (second result))
+    (define payload (third result))
     (response/full code
                    (status->message code)
                    (current-seconds)
-                   #"OK"
+                   (string->bytes/utf-8 type)
                    (list (header #"Content-Type" (string->bytes/utf-8 type)))
-                   payload)))
+                   (list payload))))
 
 (define (url->raw-path u)
   (define path-parts (map path/param-path (url-path u)))
   (string-join path-parts "/"))
 
 (define (headers-assq* name hdrs)
+  ;; Header field names are matched case-insensitively: raw requests keep
+  ;; whatever case the client sent ("Authorization" from curl, e.g.).
+  (define wanted (bytes->string/utf-8 name))
   (for/first ([h (in-list hdrs)]
-              #:when (equal? (header-field h) name))
+              #:when (equal? (string-downcase
+                              (bytes->string/utf-8 (header-field h)))
+                             wanted))
     (string-trim (bytes->string/utf-8 (header-value h)))))
 
 (define (status->message code)
@@ -255,6 +278,6 @@
   (flush-output)
   (serve/servlet (make-hub-app repo-root token)
                  #:port port
-                 #:listen-ips '("0.0.0.0")
+                 #:listen-ip #f
                  #:command-line? #t
                  #:servlet-regexp #rx""))

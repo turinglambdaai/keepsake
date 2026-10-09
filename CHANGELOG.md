@@ -16,6 +16,10 @@ starts at 1.0.0 for the first release.
 
 ### Added
 
+- Agent speaks to the hub over HTTP: `--repo http://host:port` turns any
+  command into a hub client (blobs and manifests push, restores pull) while
+  `--repo <dir>` keeps writing local/SMB volumes — same format either way.
+  Hub unreachable fails fast at startup with a hint, never mid-snapshot.
 - Keepsake Hub, first slice: a self-hosted HTTP facade over the repository
   directory (same format as local volumes) — blob upload/download, manifest
   writes, per-device snapshot listings, bearer-token auth, and
