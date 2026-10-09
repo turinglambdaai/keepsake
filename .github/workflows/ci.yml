@@ -13,21 +13,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
-      - name: gofmt
-        run: test -z "$(gofmt -l .)" || { gofmt -l .; exit 1; }
-      - name: go vet
-        run: go vet ./...
-
   test:
-    name: Test (${{ matrix.os }})
+    name: Racket engine (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -35,10 +22,24 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - name: Set up Racket CS
+        uses: Bogdanp/setup-racket@v1.15
         with:
-          go-version-file: go.mod
-      - name: go test
-        run: go test -race ./...
-      - name: go build
-        run: go build ./...
+          architecture: x64
+          distribution: full
+          variant: CS
+          version: '9.3'
+      - name: Install crypto package
+        run: raco pkg install --auto --no-docs crypto
+        shell: bash
+      - name: Test engine
+        run: raco test tests/
+        shell: bash
+
+  pages:
+    name: Pages build check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Site files are present
+        run: test -f site/index.html && test -f site/CNAME

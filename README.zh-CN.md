@@ -2,7 +2,7 @@
 
 桌面微信数据的时光机。Keepsake 像 macOS 给磁盘拍快照那样给你的微信账号目录拍快照——去重、多版本、可恢复，**全程不读取、不解密、不触碰聊天内容**。
 
-[![CI](https://github.com/turinglambdaai/keepsake/actions/workflows/ci.yml/badge.svg)](https://github.com/turinglambdaai/keepsake/actions/workflows/ci.yml) [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE) ![Go](https://img.shields.io/badge/Go-1.23%2B-00ADD8?logo=go&logoColor=white)
+[![CI](https://github.com/turinglambdaai/keepsake/actions/workflows/ci.yml/badge.svg)](https://github.com/turinglambdaai/keepsake/actions/workflows/ci.yml) [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE) ![Racket](https://img.shields.io/badge/Racket-9.3-9D00FF?logo=racket&logoColor=white)
 
 [English](README.md) · **中文** · 🌐 [keepsake.jrtx.site](https://keepsake.jrtx.site)
 
@@ -40,14 +40,16 @@ Keepsake 接过这份责任，只守一条诚实的规矩：**只处理文件，
 ## 从源码构建
 
 ```bash
-go build ./...          # 或: go install github.com/turinglambdaai/keepsake/cmd/agent@latest
-go test ./...           # 必须全绿
+raco pkg install --auto --no-docs crypto   # 唯一依赖
+raco test tests/                           # 必须全绿
 
-go run ./cmd/agent discover                     # 找到微信账号
-go run ./cmd/agent snapshot --repo ~/backup     # 第一次快照
-go run ./cmd/agent snapshot --repo ~/backup     # 再来一次：近乎零上传
-go run ./cmd/agent status --repo ~/backup       # 备份了什么、何时、在哪
+racket app/cli.rkt discover                    # 找到微信账号
+racket app/cli.rkt snapshot --repo ~/backup    # 第一次快照
+racket app/cli.rkt snapshot --repo ~/backup    # 再来一次：近乎零上传
+racket app/cli.rkt status --repo ~/backup      # 备份了什么、何时、在哪
 ```
+
+Keepsake 遵循 [Rivet](https://github.com/turinglambdaai/rivet) 架构：Racket 引擎驱动第一方原生宿主。CLI 是今天的形态；M0 里程碑会加入原生 UI（macOS 用 SwiftUI、Windows 用 WinUI 3、Linux 用 GTK4）和自托管 hub 容器。
 
 macOS 提示：读取微信容器目录需要给终端（或打包后的应用）授权一次**完全磁盘访问权限**。
 

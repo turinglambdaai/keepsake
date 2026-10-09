@@ -4,7 +4,7 @@ A time machine for your desktop WeChat data. Keepsake snapshots your WeChat
 account directory the way macOS snapshots your disk — deduplicated, versioned,
 restorable — **without ever reading, decrypting, or touching the contents**.
 
-[![CI](https://github.com/turinglambdaai/keepsake/actions/workflows/ci.yml/badge.svg)](https://github.com/turinglambdaai/keepsake/actions/workflows/ci.yml) [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE) ![Go](https://img.shields.io/badge/Go-1.23%2B-00ADD8?logo=go&logoColor=white)
+[![CI](https://github.com/turinglambdaai/keepsake/actions/workflows/ci.yml/badge.svg)](https://github.com/turinglambdaai/keepsake/actions/workflows/ci.yml) [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE) ![Racket](https://img.shields.io/badge/Racket-9.3-9D00FF?logo=racket&logoColor=white)
 
 **English** · [中文](README.zh-CN.md) · 🌐 [keepsake.jrtx.site](https://keepsake.jrtx.site)
 
@@ -65,14 +65,19 @@ snapshot, dedupe); expect format-adjacent changes until 1.0.
 ## Build from source
 
 ```bash
-go build ./...          # or: go install github.com/turinglambdaai/keepsake/cmd/agent@latest
-go test ./...           # everything must stay green
+raco pkg install --auto --no-docs crypto   # one dependency
+raco test tests/                           # everything must stay green
 
-go run ./cmd/agent discover                     # find WeChat accounts
-go run ./cmd/agent snapshot --repo ~/backup     # first snapshot
-go run ./cmd/agent snapshot --repo ~/backup     # again: near-zero upload
-go run ./cmd/agent status --repo ~/backup       # what is backed up, when, where
+racket app/cli.rkt discover                    # find WeChat accounts
+racket app/cli.rkt snapshot --repo ~/backup    # first snapshot
+racket app/cli.rkt snapshot --repo ~/backup    # again: near-zero upload
+racket app/cli.rkt status --repo ~/backup      # what is backed up, when, where
 ```
+
+Keepsake follows the [Rivet](https://github.com/turinglambdaai/rivet)
+architecture: a Racket engine behind first-party native hosts. The CLI is
+today's form; the M0 milestone adds native UI (SwiftUI on macOS, WinUI 3 on
+Windows, GTK4 on Linux) and a self-hosted hub container.
 
 macOS note: reading WeChat's container directory requires granting the
 terminal (or the packaged app) **Full Disk Access** once.
