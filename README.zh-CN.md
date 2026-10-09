@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/turinglambdaai/keepsake/actions/workflows/ci.yml/badge.svg)](https://github.com/turinglambdaai/keepsake/actions/workflows/ci.yml) [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE) ![Racket](https://img.shields.io/badge/Racket-9.3-9D00FF?logo=racket&logoColor=white)
 
-[English](README.md) · **中文** · 🌐 [keepsake.jrtx.site](https://keepsake.jrtx.site)
+[English](README.md) · **中文**
 
 ## 为什么
 

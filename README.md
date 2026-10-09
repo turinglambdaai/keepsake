@@ -6,7 +6,7 @@ restorable — **without ever reading, decrypting, or touching the contents**.
 
 [![CI](https://github.com/turinglambdaai/keepsake/actions/workflows/ci.yml/badge.svg)](https://github.com/turinglambdaai/keepsake/actions/workflows/ci.yml) [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE) ![Racket](https://img.shields.io/badge/Racket-9.3-9D00FF?logo=racket&logoColor=white)
 
-**English** · [中文](README.zh-CN.md) · 🌐 [keepsake.jrtx.site](https://keepsake.jrtx.site)
+**English** · [中文](README.zh-CN.md)
 
 ## Why
 
