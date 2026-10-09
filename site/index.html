@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Keepsake — a time machine for your desktop WeChat data</title>
+<meta name="description" content="Snapshot, deduplicate, and restore your desktop WeChat data — file-level only, zero decryption. Self-hosted, escapable format.">
+<link rel="stylesheet" href="styles.css">
+<script>
+  // Apply stored theme before first paint to avoid a flash.
+  (function () {
+    var t = localStorage.getItem('keepsake-theme');
+    if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    document.documentElement.dataset.theme = t;
+    var l = localStorage.getItem('keepsake-lang');
+    if (!l) l = (navigator.language || 'en').toLowerCase().startsWith('zh') ? 'zh' : 'en';
+    document.documentElement.lang = l === 'zh' ? 'zh-CN' : 'en';
+  })();
+</script>
+</head>
+<body>
+<header class="top">
+  <div class="wordmark">Keepsake</div>
+  <nav>
+    <button class="ghost" id="lang-btn" aria-label="Switch language">中文</button>
+    <button class="ghost" id="theme-btn" aria-label="Toggle theme">◐</button>
+    <a class="ghost" href="https://github.com/turinglambdaai/keepsake" target="_blank" rel="noopener">GitHub ↗</a>
+  </nav>
+</header>
+
+<main>
+  <section class="hero">
+    <p class="kicker" data-i18n="kicker">file-level backup · zero decryption</p>
+    <h1 data-i18n="hero-title">A time machine for your desktop WeChat data.</h1>
+    <p class="lede" data-i18n="hero-lede">
+      WeChat keeps no server-side copy of your chats — your local data folder is
+      the only one that exists. Keepsake snapshots it the way macOS snapshots your
+      disk: deduplicated, versioned, restorable. It handles files, never content.
+    </p>
+    <div class="cta">
+      <a class="primary" href="https://github.com/turinglambdaai/keepsake" data-i18n="cta-github">View on GitHub</a>
+      <a class="secondary" href="#how" data-i18n="cta-how">How it works</a>
+    </div>
+  </section>
+
+  <section class="grid three">
+    <div class="card">
+      <h3 data-i18n="q1-title">Where is my data, how big?</h3>
+      <p data-i18n="q1-body">Keepsake finds every WeChat account directory on the machine and
+      shows what each holds — message databases, images, videos, files — with real sizes.</p>
+    </div>
+    <div class="card">
+      <h3 data-i18n="q2-title">When was it backed up, to where?</h3>
+      <p data-i18n="q2-body">Every snapshot lands on a per-device timeline: when, how big,
+      what changed, and which volume it lives on. No black box, ever.</p>
+    </div>
+    <div class="card">
+      <h3 data-i18n="q3-title">How do I get it back?</h3>
+      <p data-i18n="q3-body">Pick a snapshot, restore it in place — after an automatic safety
+      snapshot of the current data. Verify by opening WeChat itself.</p>
+    </div>
+  </section>
+
+  <section id="how" class="prose">
+    <h2 data-i18n="principles-title">Design principles</h2>
+    <div class="grid two">
+      <div class="card">
+        <h3 data-i18n="p1-title">Zero decryption</h3>
+        <p data-i18n="p1-body">No key extraction, no database decryption, no process
+        injection — the line Keepsake never crosses. Viewing and restoring happen
+        through WeChat itself.</p>
+      </div>
+      <div class="card">
+        <h3 data-i18n="p2-title">Escapable format</h3>
+        <p data-i18n="p2-body">A repository is a plain directory of JSON manifests and
+        content-addressed blobs. If Keepsake vanished tomorrow, <code>jq</code> and
+        <code>cp</code> can rebuild any snapshot.</p>
+      </div>
+      <div class="card">
+        <h3 data-i18n="p3-title">The hub is never a single point</h3>
+        <p data-i18n="p3-body">Agents write the same repository straight to a local volume
+        or NAS mount. A self-hosted hub (Docker) adds scheduling, dedup reports, and a
+        multi-device timeline — nothing depends on it staying up.</p>
+      </div>
+      <div class="card">
+        <h3 data-i18n="p4-title">Restore never destroys</h3>
+        <p data-i18n="p4-body">Every restore begins with an automatic safety snapshot of
+        the current data. Paying is never what keeps your backups alive.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="prose">
+    <h2 data-i18n="platforms-title">Platforms</h2>
+    <p class="platform-row">
+      <span class="chip ok">macOS</span>
+      <span class="chip ok">Windows</span>
+      <span class="chip ok">Linux</span>
+      <span class="chip" data-i18n="chip-phone">iOS / Android → via WeChat's own migrate flow</span>
+    </p>
+    <p class="muted" data-i18n="platforms-body">
+      Desktop clients keep data in local files — that is Keepsake's whole world.
+      Phones sandbox WeChat beyond reach, so phone history joins the backup through
+      WeChat's built-in migrate-to-desktop step, then gets snapshotted like everything else.
+    </p>
+  </section>
+
+  <section class="prose">
+    <h2 data-i18n="roadmap-title">Roadmap</h2>
+    <ul>
+      <li><strong>M0</strong> — <span data-i18n="rm0">discover · snapshot · dedupe · repository format v1 · restore flow</span></li>
+      <li><strong>M1</strong> — <span data-i18n="rm1">self-hosted hub (Docker): REST API, multi-device timeline, Web UI</span></li>
+      <li><strong>M2</strong> — <span data-i18n="rm2">Windows / Linux agent hardening, hub release</span></li>
+    </ul>
+  </section>
+</main>
+
+<footer>
+  <span>MIT License · <a href="https://github.com/turinglambdaai/keepsake">github.com/turinglambdaai/keepsake</a></span>
+  <span data-i18n="footer-note">Keepsake is an independent tool. It is not affiliated with or endorsed by Tencent. WeChat is a trademark of Tencent.</span>
+</footer>
+
+<script>
+(function () {
+  var I18N = {
+    en: {
+      'kicker': 'file-level backup · zero decryption',
+      'hero-title': 'A time machine for your desktop WeChat data.',
+      'hero-lede': "WeChat keeps no server-side copy of your chats — your local data folder is the only one that exists. Keepsake snapshots it the way macOS snapshots your disk: deduplicated, versioned, restorable. It handles files, never content.",
+      'cta-github': 'View on GitHub',
+      'cta-how': 'How it works',
+      'q1-title': 'Where is my data, how big?',
+      'q1-body': 'Keepsake finds every WeChat account directory on the machine and shows what each holds — message databases, images, videos, files — with real sizes.',
+      'q2-title': 'When was it backed up, to where?',
+      'q2-body': 'Every snapshot lands on a per-device timeline: when, how big, what changed, and which volume it lives on. No black box, ever.',
+      'q3-title': 'How do I get it back?',
+      'q3-body': 'Pick a snapshot, restore it in place — after an automatic safety snapshot of the current data. Verify by opening WeChat itself.',
+      'principles-title': 'Design principles',
+      'p1-title': 'Zero decryption',
+      'p1-body': 'No key extraction, no database decryption, no process injection — the line Keepsake never crosses. Viewing and restoring happen through WeChat itself.',
+      'p2-title': 'Escapable format',
+      'p2-body': 'A repository is a plain directory of JSON manifests and content-addressed blobs. If Keepsake vanished tomorrow, jq and cp can rebuild any snapshot.',
+      'p3-title': 'The hub is never a single point',
+      'p3-body': 'Agents write the same repository straight to a local volume or NAS mount. A self-hosted hub (Docker) adds scheduling, dedup reports, and a multi-device timeline — nothing depends on it staying up.',
+      'p4-title': 'Restore never destroys',
+      'p4-body': 'Every restore begins with an automatic safety snapshot of the current data. Paying is never what keeps your backups alive.',
+      'platforms-title': 'Platforms',
+      'chip-phone': 'iOS / Android → via WeChat\u2019s own migrate flow',
+      'platforms-body': 'Desktop clients keep data in local files — that is Keepsake\u2019s whole world. Phones sandbox WeChat beyond reach, so phone history joins the backup through WeChat\u2019s built-in migrate-to-desktop step, then gets snapshotted like everything else.',
+      'roadmap-title': 'Roadmap',
+      'rm0': 'discover · snapshot · dedupe · repository format v1 · restore flow',
+      'rm1': 'self-hosted hub (Docker): REST API, multi-device timeline, Web UI',
+      'rm2': 'Windows / Linux agent hardening, hub release',
+      'footer-note': 'Keepsake is an independent tool. It is not affiliated with or endorsed by Tencent. WeChat is a trademark of Tencent.'
+    },
+    zh: {
+      'kicker': '文件级备份 · 零解密',
+      'hero-title': '桌面微信数据的时光机。',
+      'hero-lede': '微信不在服务器上保存聊天记录——你本地的数据目录就是世上唯一一份。Keepsake 像 macOS 给磁盘拍快照那样给它拍快照：去重、多版本、可恢复。只处理文件，不碰内容。',
+      'cta-github': '前往 GitHub',
+      'cta-how': '工作原理',
+      'q1-title': '数据在哪、有多大？',
+      'q1-body': 'Keepsake 找到本机每一个微信账号目录，告诉你各有什么——消息库、图片、视频、文件——和真实大小。',
+      'q2-title': '备份了吗、到哪了？',
+      'q2-body': '每份快照落在按设备划分的时间线上：何时、多大、变了什么、存在哪块盘。永远是明账。',
+      'q3-title': '怎么找回来？',
+      'q3-body': '选一份快照原位恢复——动手前自动先给当前数据拍一份保险快照。恢复结果打开微信本体验收。',
+      'principles-title': '设计原则',
+      'p1-title': '零解密',
+      'p1-body': '不提取密钥、不解密数据库、不注入进程——这条线永远不碰。查看与恢复都走微信本体。',
+      'p2-title': '可逃生的格式',
+      'p2-body': '仓库就是一个平铺目录：JSON manifest + 内容寻址的 blob。就算项目明天消失，jq 和 cp 也能拼回任何一份快照。',
+      'p3-title': 'Hub 永远不是单点',
+      'p3-body': 'Agent 可以把同样的仓库直接写到本地卷或 NAS 挂载；自托管 hub（Docker）只增加调度、去重报告和多设备时间线——什么都不依赖它活着。',
+      'p4-title': '恢复永不破坏',
+      'p4-body': '每次恢复都以当前数据的自动保险快照开场。付费从来不是备份活着的前提。',
+      'platforms-title': '平台',
+      'chip-phone': 'iOS / Android → 经微信自带迁移进入桌面端',
+      'platforms-body': '桌面版微信的数据在本地文件里——这就是 Keepsake 的全部世界。手机端被沙盒锁住够不着：手机历史通过微信自带的「迁移到电脑」进入桌面端，再被同样地快照。',
+      'roadmap-title': '路线图',
+      'rm0': '发现 · 快照 · 去重 · 仓库格式 v1 · 恢复流',
+      'rm1': '自托管 hub（Docker）：REST API、多设备时间线、Web UI',
+      'rm2': 'Windows / Linux agent 加固、hub 发布',
+      'footer-note': 'Keepsake 是独立工具，与腾讯无关、未获其认可。WeChat 是腾讯的商标。'
+    }
+  };
+
+  function setLang(lang) {
+    document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+    var dict = I18N[lang];
+    document.querySelectorAll('[data-i18n]').forEach(function (el) {
+      var key = el.getAttribute('data-i18n');
+      if (dict[key]) el.textContent = dict[key];
+    });
+    document.getElementById('lang-btn').textContent = lang === 'zh' ? 'EN' : '中文';
+    localStorage.setItem('keepsake-lang', lang);
+  }
+
+  document.getElementById('lang-btn').addEventListener('click', function () {
+    setLang(document.documentElement.lang === 'zh-CN' ? 'en' : 'zh');
+  });
+
+  document.getElementById('theme-btn').addEventListener('click', function () {
+    var next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = next;
+    localStorage.setItem('keepsake-theme', next);
+  });
+
+  setLang(document.documentElement.lang === 'zh-CN' ? 'zh' : 'en');
+})();
+</script>
+</body>
+</html>
