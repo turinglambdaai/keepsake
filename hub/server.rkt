@@ -20,7 +20,8 @@
          racket/string
          web-server/http
          "../app/format.rkt"
-         "../app/repo.rkt")
+         "../app/repo.rkt"
+         "timeline.rkt")
 
 (provide (contract-out
           [route (-> path-string? (or/c string? #f)
@@ -84,7 +85,8 @@
      (jsexpr-response 200 (hasheq 'ok #t 'format_version format-version))]
 
     [(and (equal? method "GET") (null? segments))
-     (jsexpr-response 200 (hasheq 'service "keepsake-hub"))]
+     (list 200 "text/html; charset=utf-8"
+           (string->bytes/utf-8 (timeline-html repo-root token)))]
 
     ;; ---- devices ----
     [(and (equal? method "GET")
@@ -225,7 +227,13 @@
     (define raw-path
       (url->raw-path (request-uri req)))
     (define auth-header
-      (headers-assq* #"authorization" (request-headers/raw req)))
+      (or (headers-assq* #"authorization" (request-headers/raw req))
+          ;; Browsers cannot send Authorization headers; ?token= works for
+          ;; the read-only timeline on a trusted LAN.
+          (let ([q (url-query (request-uri req))])
+            (for/first ([kv (in-list q)]
+                        #:when (equal? (car kv) 'token))
+              (string-append "Bearer " (cdr kv))))))
     (define body
       (or (request-post-data/raw req) #""))
     (define result (route repo-root token method raw-path auth-header body))

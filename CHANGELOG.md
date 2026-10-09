@@ -16,6 +16,13 @@ starts at 1.0.0 for the first release.
 
 ### Added
 
+- Hub web timeline: GET / serves a server-rendered, auto-refreshing view of
+  every device's snapshot history and repository size (browsers authenticate
+  with ?token= on the URL).
+- Repository hygiene tools: `hub/gc.rkt` marks referenced blobs and sweeps
+  unreferenced ones past a grace window (protecting in-flight uploads), and
+  `hub/verify.rkt` audits every manifest and referenced blob (parse + hash)
+  reporting corruption by name. Both pure-directory tools, unit tested.
 - Agent speaks to the hub over HTTP: `--repo http://host:port` turns any
   command into a hub client (blobs and manifests push, restores pull) while
   `--repo <dir>` keeps writing local/SMB volumes — same format either way.
