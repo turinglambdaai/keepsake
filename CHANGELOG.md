@@ -16,6 +16,12 @@ starts at 1.0.0 for the first release.
 
 ### Added
 
+- Hub license gate (MT Photos-style honesty scheme, like payback's PB1):
+  30-day trial from the repository's creation stamp, Ed25519-signed KS1
+  activation tokens verified fully offline, and an activation endpoint.
+  An expired hub refuses new writes (402) but serves reads and restores
+  forever — agents fail over to directory writes, so no data is ever
+  held hostage.
 - Hub web timeline: GET / serves a server-rendered, auto-refreshing view of
   every device's snapshot history and repository size (browsers authenticate
   with ?token= on the URL).

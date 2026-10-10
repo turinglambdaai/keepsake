@@ -21,6 +21,7 @@
          web-server/http
          "../app/format.rkt"
          "../app/repo.rkt"
+         "license.rkt"
          "timeline.rkt")
 
 (provide (contract-out
@@ -221,6 +222,38 @@
 
 ;; Extracts (method raw-path auth-header body-bytes) from a web-server
 ;; request and hands it to `route`.
+;; license.json = (hasheq 'token string) in the repository root; env is the
+;; fallback for hosts that prefer secrets over files.
+(define (json-response code value)
+  (response/full code
+                 #"OK"
+                 (current-seconds)
+                 #"application/json; charset=utf-8"
+                 (list (header #"Content-Type" #"application/json; charset=utf-8"))
+                 (list (jsexpr->bytes value))))
+
+(define (load-license-token repo-root)
+  (or (getenv "KEEPSAKE_HUB_LICENSE")
+      (with-handlers ([exn:fail? (lambda (_) #f)])
+        (hash-ref
+         (with-input-from-file (build-path repo-root "license.json") read-json)
+         'token #f))))
+
+;; POST /api/license with a token body: verify, persist if valid, answer
+;; with the resulting state.
+(define (handle-license-post repo-root body)
+  (define token (string-trim (bytes->string/utf-8 body)))
+  (define-values (claims reason) (parse-and-verify token))
+  (if claims
+      (begin
+        (with-output-to-file (build-path repo-root "license.json")
+          #:exists 'truncate
+          (lambda () (write-json (hasheq 'token token))))
+        (json-response 200
+                       (hasheq 'ok #t 'state "licensed"
+                               'subject (hash-ref claims 'subject ""))))
+      (json-response 400 (hasheq 'ok #f 'reason reason))))
+
 (define (make-hub-app repo-root token)
   (lambda (req)
     (define method (bytes->string/utf-8 (request-method req)))
@@ -236,17 +269,39 @@
               (string-append "Bearer " (cdr kv))))))
     (define body
       (or (request-post-data/raw req) #""))
-    (define result (route repo-root token method raw-path auth-header body))
-    (define code (first result))
-    (define type (second result))
-    (define payload (third result))
+
+    ;; license gate: writes only; reads and restores are never blocked
+    (define license-token (load-license-token repo-root))
+    (define decision (license-decision repo-root license-token))
+    (define state (hash-ref decision 'state))
+    (define write-blocked?
+      (and (equal? method "PUT")
+           (not (equal? raw-path "/api/license"))
+           (member state (list "expired" "invalid"))))
+
+    (cond
+      [(equal? raw-path "/api/license")
+       (handle-license-post repo-root body)]
+      [write-blocked?
+       (displayln (format "keepsake-hub: write refused (license ~a)" state))
+       (json-response
+        402
+        (hasheq 'error "license required for new writes"
+                'state state
+                'note "reads and restores are never blocked; agents can fail over to directory writes"))]
+      [else
+       (define result (route repo-root token method raw-path auth-header body))
+       (define code (first result))
+       (define type (second result))
+       (define payload (third result))
     (response/full code
                    (status->message code)
                    (current-seconds)
                    (string->bytes/utf-8 type)
                    (list (header #"Content-Type" (string->bytes/utf-8 type)))
-                   (list payload))))
+                   (list payload))]))
 
+)
 (define (url->raw-path u)
   (define path-parts (map path/param-path (url-path u)))
   (string-join path-parts "/"))
