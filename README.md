@@ -88,6 +88,11 @@ format-adjacent changes until 1.0.
       license gate, agent HTTP push
 - [ ] M1 — hub polish: activation tooling for vendors, web UI refinements
 - [ ] M2 — Windows/Linux native hosts, hub release with signed images
+- [ ] M3 — mobile: iOS / iPadOS host (Rivet's portable Swift layer) and
+      Android host (Rivet's Kotlin platform) as native hub clients — browse
+      the timeline, trigger and watch restores — matching the family's
+      full-platform scope; a watchOS backup-status companion trails the
+      phone host
 
 ## Build from source
 
