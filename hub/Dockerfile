@@ -5,8 +5,7 @@
 FROM racket/racket:9.3
 
 RUN raco pkg install --auto --no-docs crypto
-# timeline websocket fan-out (github source until it reaches the catalog)
-RUN raco pkg install --auto --no-docs https://github.com/turinglambdaai/websocket.git
+RUN raco pkg install --auto --no-docs websocket
 
 WORKDIR /hub
 COPY app/ /hub/app/
