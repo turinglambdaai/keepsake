@@ -3,7 +3,8 @@
 ;; License tests: token issue/verify round trip, tamper rejection, expiry,
 ;; and the trial/expired/licensed decision logic.
 
-(require crypto
+(require racket/date
+         crypto
          crypto/all
          json
          net/base64
@@ -82,6 +83,16 @@
      (check-equal? reason "malformed"))))
 
 (test-case "trial-state counts down from the repository creation stamp"
+  ;; stamps are computed relative to now — hardcoding calendar dates
+  ;; turns this into a time bomb the moment the trial window passes
+  (define (stamp-days-ago days)
+    (define d (seconds->date (- (current-seconds) (* days 86400)) #t))
+    (define (p2 n)
+      (if (< n 10) (string-append "0" (number->string n))
+          (number->string n)))
+    (format "~a-~a-~aT~a:~a:~a"
+            (date-year d) (p2 (date-month d)) (p2 (date-day d))
+            (p2 (date-hour d)) (p2 (date-minute d)) (p2 (date-second d))))
   (define root (make-temporary-file "keepsake-lic-~a" 'directory))
   (repo-init root)
   ;; fresh repository: 30-day trial just started
@@ -92,15 +103,13 @@
   (with-output-to-file marker-path
     #:exists 'replace
     (lambda ()
-      (write-json (hash-set marker 'created_at
-                            "2026-09-10T12:00:00.000Z"))))
+      (write-json (hash-set marker 'created_at (stamp-days-ago 29)))))
   (check-equal? (trial-state root (current-seconds)) 1)
   ;; created before the trial window: trial over
   (with-output-to-file marker-path
     #:exists 'replace
     (lambda ()
-      (write-json (hash-set marker 'created_at
-                            "2026-08-01T12:00:00.000Z"))))
+      (write-json (hash-set marker 'created_at (stamp-days-ago 39)))))
   (check-equal? (trial-state root (current-seconds)) 0))
 
 (test-case "license-decision: trial, licensed, expired"
