@@ -95,7 +95,7 @@
           (string-join (map snapshot-row (reverse snaps)) "")
           "</table></section>")))
 
-(define (timeline-html root token)
+(define (timeline-html root token [ws-port 8081])
   (define timelines (load-timelines root))
   (define-values (blob-count blob-bytes) (repo-blob-stats root))
   (define device-sections
@@ -127,8 +127,14 @@
           "<h1>Keepsake Hub</h1>"
           "<p class=\"stats\">repository " (human blob-bytes)
           " - " (number->string blob-count)
-          " blobs - refreshes every 60s</p>"
+          " blobs - live (falls back to a 60s refresh)</p>"
           device-sections
           "<p class=\"footer\">Keepsake Hub - read-only timeline - blobs and"
           " manifests are available through the API after token auth.</p>"
+          "<script>"
+          "try{var w=new WebSocket(\"ws://\"+location.hostname+\":"
+          (number->string ws-port)
+          "/timeline?token=" token
+          "\");w.onmessage=function(e){try{if(JSON.parse(e.data).event===\"timeline_changed\")location.reload()}catch(_){}};}catch(_){}"
+          "</script>"
           "</body></html>")))

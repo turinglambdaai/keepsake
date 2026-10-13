@@ -25,10 +25,15 @@
          "timeline.rkt")
 
 (provide (contract-out
-          [route (-> path-string? (or/c string? #f)
-                     string? string? (or/c string? #f) bytes?
-                     (list/c exact-nonnegative-integer? string? bytes?))]
-          [hub-repo-open (-> path-string? repo?)]))
+          [route (->* (path-string? (or/c string? #f)
+                       string? string? (or/c string? #f) bytes?)
+                      (exact-nonnegative-integer?)
+                      (list/c exact-nonnegative-integer? string? bytes?))]
+          [hub-repo-open (-> path-string? repo?)]
+          [make-hub-app
+           (->* (path-string? (or/c string? #f))
+                ((-> void?) exact-nonnegative-integer?)
+                (-> any/c any/c))]))
 
 ;; ---- repository handle ----
 
@@ -71,7 +76,7 @@
 ;;   PUT  /api/blobs/sha256/<xx>/<hash>          (raw bytes)
 ;;   PUT  /api/devices/<device>/snapshots/<name> (manifest JSON)
 ;;   GET  /                                      (timeline page)
-(define (route repo-root token method raw-path auth-header body)
+(define (route repo-root token method raw-path auth-header body [ws-port 8081])
   (define path (string-split (string-trim raw-path "/") "/" #:trim? #f))
   (define segments (map (lambda (s) (uri-decode-safe s)) path))
 
@@ -87,7 +92,7 @@
 
     [(and (equal? method "GET") (null? segments))
      (list 200 "text/html; charset=utf-8"
-           (string->bytes/utf-8 (timeline-html repo-root token)))]
+           (string->bytes/utf-8 (timeline-html repo-root token ws-port)))]
 
     ;; ---- devices ----
     [(and (equal? method "GET")
@@ -254,7 +259,9 @@
                                'subject (hash-ref claims 'subject ""))))
       (json-response 400 (hasheq 'ok #f 'reason reason))))
 
-(define (make-hub-app repo-root token)
+;; on-write fires after any 2xx write so the timeline websocket can
+;; push; it lives here (not in route) to keep route pure
+(define (make-hub-app repo-root token [on-write void] [ws-port 8081])
   (lambda (req)
     (define method (bytes->string/utf-8 (request-method req)))
     (define raw-path
@@ -290,10 +297,14 @@
                 'state state
                 'note "reads and restores are never blocked; agents can fail over to directory writes"))]
       [else
-       (define result (route repo-root token method raw-path auth-header body))
+       (define result
+         (route repo-root token method raw-path auth-header body ws-port))
        (define code (first result))
        (define type (second result))
        (define payload (third result))
+       ;; 200 = manifest write, 204 = blob write; both change the timeline
+       (when (and (equal? method "PUT") (memv code (list 200 204)))
+         (on-write))
     (response/full code
                    (status->message code)
                    (current-seconds)
@@ -328,18 +339,28 @@
 
 (module+ main
   (require web-server/servlet-env
-           racket/cmdline)
+           racket/cmdline
+           "ws.rkt")
   (define repo-root
     (or (getenv "KEEPSAKE_HUB_REPO_ROOT") "hub-repo"))
   (define token (getenv "KEEPSAKE_HUB_TOKEN"))
   (define port
     (string->number (or (getenv "KEEPSAKE_HUB_PORT") "8080")))
+  (define ws-port
+    (string->number (or (getenv "KEEPSAKE_HUB_WS_PORT")
+                        (number->string (+ port 1)))))
   (hub-repo-open repo-root)
   (when (not token)
     (displayln "keepsake-hub: KEEPSAKE_HUB_TOKEN is not set — running in open mode; set a token before exposing this port"))
-  (printf "keepsake-hub: repository at ~a, listening on :~a\n" repo-root port)
+  (define timeline-ws (make-ws-hub token))
+  (define-values (ws-real-port _ws-thread)
+    (serve-timeline-ws! timeline-ws #:port ws-port))
+  (printf "keepsake-hub: repository at ~a, listening on :~a, timeline ws on :~a\n"
+          repo-root port ws-real-port)
   (flush-output)
-  (serve/servlet (make-hub-app repo-root token)
+  (serve/servlet (make-hub-app repo-root token
+                               (λ () (ws-hub-notify! timeline-ws))
+                               ws-real-port)
                  #:port port
                  #:listen-ip #f
                  #:command-line? #t
