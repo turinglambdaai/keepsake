@@ -27,6 +27,11 @@ jobs:
         with:
           repository: turinglambdaai/rivet
           path: rivet
+      - name: Check out Keel
+        uses: actions/checkout@v4
+        with:
+          repository: turinglambdaai/keel
+          path: keel
       - name: Set up Racket CS
         uses: Bogdanp/setup-racket@v1.15
         with:
@@ -41,7 +46,7 @@ jobs:
         run: raco pkg install --auto --no-docs https://github.com/turinglambdaai/websocket.git
         shell: bash
       - name: Link Rivet checkout
-        run: raco pkg install --auto --no-docs --link "$GITHUB_WORKSPACE/rivet/rivet" "$GITHUB_WORKSPACE/rivet/rivet-cli"
+        run: raco pkg install --auto --no-docs --link "$GITHUB_WORKSPACE/rivet/rivet" "$GITHUB_WORKSPACE/rivet/rivet-cli" "$GITHUB_WORKSPACE/keel/keel"
         shell: bash
       - name: Test engine
         run: raco test tests/
