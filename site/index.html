@@ -135,10 +135,11 @@
         <h3 data-i18n="dl-v010-title">v0.1.0 — macOS 首发</h3>
         <p data-i18n="dl-v010-body">需要 macOS 14+。Apple Silicon 选 arm64，Intel 选 x64。未签名公证：首次打开右键点图标，选「打开」。</p>
         <p class="platform-row">
-          <a class="btn btn-primary" href="https://github.com/turinglambdaai/keepsake/releases/download/v0.1.0/keepsake-0.1.0-macos-arm64.dmg" data-i18n="dl-arm64">下载 arm64 (.dmg)</a>
-          <a class="btn btn-secondary" href="https://github.com/turinglambdaai/keepsake/releases/download/v0.1.0/keepsake-0.1.0-macos-x64.dmg" data-i18n="dl-x64">下载 x64 (.dmg)</a>
+          <a id="dl-arm64" class="btn btn-primary" href="https://github.com/turinglambdaai/keepsake/releases/latest/download/keepsake-macos-arm64.dmg" data-i18n="dl-arm64">下载 arm64 (.dmg)</a>
+          <a id="dl-x64" class="btn btn-secondary" href="https://github.com/turinglambdaai/keepsake/releases/latest/download/keepsake-macos-x64.dmg" data-i18n="dl-x64">下载 x64 (.dmg)</a>
         </p>
-        <p><a class="muted" href="https://github.com/turinglambdaai/keepsake/releases/tag/v0.1.0" data-i18n="dl-all">全部资产（zip、SHA256SUMS）与源码</a></p>
+        <p class="muted" id="dl-detect" data-i18n="dl-detect-default" hidden></p>
+        <p><a class="muted" href="https://github.com/turinglambdaai/keepsake/releases/latest" data-i18n="dl-all">全部资产（zip、SHA256SUMS）与源码</a></p>
       </div>
       <div class="dl-card">
         <h3 data-i18n="dl-platforms-title">平台</h3>
@@ -207,6 +208,9 @@
       'dl-v010-body': 'Requires macOS 14+. Pick arm64 for Apple Silicon, x64 for Intel. Unsigned and not notarized: right-click the icon and choose Open on first launch.',
       'dl-arm64': 'Download arm64 (.dmg)',
       'dl-x64': 'Download x64 (.dmg)',
+      'dl-detect-default': '',
+      'dl-detect-arm': 'Detected Apple Silicon — the arm64 build is highlighted for you.',
+      'dl-detect-x64': 'Detected an Intel Mac — the x64 build is highlighted for you.',
       'dl-all': 'All assets (zip, SHA256SUMS) and source',
       'dl-platforms-title': 'Platforms',
       'dl-platforms-body': 'Desktop clients keep data in local files — that is Keepsake\u2019s whole world. Phones sandbox WeChat beyond reach: phone history joins the backup through WeChat\u2019s built-in migrate-to-desktop step, then gets snapshotted like everything else.',
@@ -251,6 +255,9 @@
       'dl-v010-body': '需要 macOS 14+。Apple Silicon 选 arm64，Intel 选 x64。未签名公证：首次打开右键点图标，选「打开」。',
       'dl-arm64': '下载 arm64 (.dmg)',
       'dl-x64': '下载 x64 (.dmg)',
+      'dl-detect-default': '',
+      'dl-detect-arm': '检测到 Apple Silicon——已为你高亮 arm64 版。',
+      'dl-detect-x64': '检测到 Intel 芯片——已为你高亮 x64 版。',
       'dl-all': '全部资产（zip、SHA256SUMS）与源码',
       'dl-platforms-title': '平台',
       'dl-platforms-body': '手机端被平台沙盒锁住：手机历史通过微信自带的「迁移到电脑」进入桌面端后，再被快照覆盖。',
@@ -285,6 +292,45 @@
     document.documentElement.dataset.theme = next;
     localStorage.setItem('keepsake-theme', next);
   });
+
+  // Platform detection: highlight the matching download and say so.
+  // Alias links already point at the right file per button — detection
+  // only moves the primary styling and shows a hint line.
+  (function () {
+    var ua = navigator.userAgent + ' ' + (navigator.platform || '');
+    var isMac = /Mac/.test(ua) && !/iPhone|iPad/.test(ua);
+    if (!isMac) return;
+    // The UA string on Apple Silicon still says "Intel" for compat, so
+    // the honest signal is the WebGL renderer. No signal → leave both
+    // buttons alone.
+    var isArm = null;
+    try {
+      var canvas = document.createElement('canvas');
+      var gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+      var ext = gl && gl.getExtension('WEBGL_debug_renderer_info');
+      var renderer = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : '';
+      if (/Apple M|Apple GPU/.test(renderer)) isArm = true;
+      if (/Intel/.test(renderer) && !/Apple/.test(renderer)) isArm = false;
+    } catch (e) { /* renderer unknown — leave both buttons as-is */ }
+    if (isArm === null) return;
+    var arm = document.getElementById('dl-arm64');
+    var x64 = document.getElementById('dl-x64');
+    var hint = document.getElementById('dl-detect');
+    var lang = document.documentElement.lang === 'zh-CN' ? 'zh' : 'en';
+    var setHint = function () {
+      lang = document.documentElement.lang === 'zh-CN' ? 'zh' : 'en';
+      hint.textContent = I18N[lang][isArm ? 'dl-detect-arm' : 'dl-detect-x64'];
+    };
+    if (isArm) {
+      arm.className = 'btn btn-primary'; x64.className = 'btn btn-secondary';
+    } else {
+      x64.className = 'btn btn-primary'; arm.className = 'btn btn-secondary';
+    }
+    hint.hidden = false;
+    setHint();
+    var observer = new MutationObserver(setHint);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+  })();
 
   setLang(document.documentElement.lang === 'zh-CN' ? 'zh' : 'en');
 })();

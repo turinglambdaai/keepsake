@@ -37,8 +37,10 @@ jobs:
           version: '9.3'
       - name: Install Rivet (keel resolves via its dependency closure)
         run: raco pkg install --auto --no-docs 'https://github.com/turinglambdaai/rivet.git#${{ env.RIVET_PIN }}'
-      - name: Install crypto (engine dependency)
-        run: raco pkg install --auto --no-docs crypto
+      # Same closure ci.yml installs — the embedded backend must build
+      # against the exact dependency set the tests run against.
+      - name: Install crypto + websocket (engine dependencies)
+        run: raco pkg install --auto --no-docs crypto websocket
       - name: Version preflight (rivet.rktd == tag)
         run: |
           set -euo pipefail
@@ -100,3 +102,10 @@ jobs:
             --notes-file /tmp/notes.md \
             --latest \
             *.dmg *.zip *.sha256 SHA256SUMS
+          # Stable alias links for the site's download card and platform
+          # detection — the URLs never change across releases. --clobber
+          # overwrites the alias on a re-tag of the same version.
+          cp "keepsake-${VERSION}-macos-arm64.dmg" keepsake-macos-arm64.dmg
+          cp "keepsake-${VERSION}-macos-x64.dmg" keepsake-macos-x64.dmg
+          gh release upload "$GITHUB_REF_NAME" --clobber \
+            keepsake-macos-arm64.dmg keepsake-macos-x64.dmg
