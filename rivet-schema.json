@@ -8,30 +8,53 @@
         "kind": "scalar",
         "name": "String"
       }
+    },
+    {
+      "name": "snapshots-changed",
+      "type": {
+        "kind": "scalar",
+        "name": "String"
+      }
     }
   ],
   "format": "rivet-schema",
   "format-version": 1,
-  "records": [],
-  "rpcs": [
+  "records": [
     {
-      "arguments": [
+      "fields": [
         {
-          "name": "name",
+          "name": "id",
+          "type": {
+            "kind": "scalar",
+            "name": "String"
+          }
+        },
+        {
+          "name": "path",
+          "type": {
+            "kind": "scalar",
+            "name": "String"
+          }
+        },
+        {
+          "name": "size-label",
           "type": {
             "kind": "scalar",
             "name": "String"
           }
         }
       ],
-      "name": "greet",
-      "result": {
-        "kind": "scalar",
-        "name": "String"
-      }
+      "name": "AccountInfo"
     },
     {
-      "arguments": [
+      "fields": [
+        {
+          "name": "ok",
+          "type": {
+            "kind": "scalar",
+            "name": "Bool"
+          }
+        },
         {
           "name": "message",
           "type": {
@@ -40,7 +63,169 @@
           }
         }
       ],
-      "name": "notify",
+      "name": "OperationResult"
+    },
+    {
+      "fields": [
+        {
+          "name": "index",
+          "type": {
+            "kind": "scalar",
+            "name": "Int64"
+          }
+        },
+        {
+          "name": "created-at",
+          "type": {
+            "kind": "scalar",
+            "name": "String"
+          }
+        },
+        {
+          "name": "account",
+          "type": {
+            "kind": "scalar",
+            "name": "String"
+          }
+        },
+        {
+          "name": "file-count",
+          "type": {
+            "kind": "scalar",
+            "name": "Int64"
+          }
+        },
+        {
+          "name": "total-label",
+          "type": {
+            "kind": "scalar",
+            "name": "String"
+          }
+        }
+      ],
+      "name": "SnapshotInfo"
+    }
+  ],
+  "rpcs": [
+    {
+      "arguments": [],
+      "name": "get-auto-snapshot",
+      "result": {
+        "kind": "scalar",
+        "name": "Int64"
+      }
+    },
+    {
+      "arguments": [],
+      "name": "get-repository-location",
+      "result": {
+        "kind": "scalar",
+        "name": "String"
+      }
+    },
+    {
+      "arguments": [],
+      "name": "list-accounts",
+      "result": {
+        "element": {
+          "kind": "record",
+          "name": "AccountInfo"
+        },
+        "kind": "list"
+      }
+    },
+    {
+      "arguments": [
+        {
+          "name": "account-id",
+          "type": {
+            "kind": "scalar",
+            "name": "String"
+          }
+        }
+      ],
+      "name": "list-snapshots",
+      "result": {
+        "element": {
+          "kind": "record",
+          "name": "SnapshotInfo"
+        },
+        "kind": "list"
+      }
+    },
+    {
+      "arguments": [
+        {
+          "name": "account-id",
+          "type": {
+            "kind": "scalar",
+            "name": "String"
+          }
+        },
+        {
+          "name": "index",
+          "type": {
+            "kind": "scalar",
+            "name": "Int64"
+          }
+        },
+        {
+          "name": "target",
+          "type": {
+            "kind": "scalar",
+            "name": "String"
+          }
+        }
+      ],
+      "name": "restore-snapshot",
+      "result": {
+        "kind": "record",
+        "name": "OperationResult"
+      }
+    },
+    {
+      "arguments": [
+        {
+          "name": "account-id",
+          "type": {
+            "kind": "scalar",
+            "name": "String"
+          }
+        }
+      ],
+      "name": "run-snapshot",
+      "result": {
+        "kind": "record",
+        "name": "OperationResult"
+      }
+    },
+    {
+      "arguments": [
+        {
+          "name": "minutes",
+          "type": {
+            "kind": "scalar",
+            "name": "Int64"
+          }
+        }
+      ],
+      "name": "set-auto-snapshot",
+      "result": {
+        "kind": "scalar",
+        "name": "Void"
+      }
+    },
+    {
+      "arguments": [
+        {
+          "name": "path",
+          "type": {
+            "kind": "scalar",
+            "name": "String"
+          }
+        }
+      ],
+      "name": "set-repository-location",
       "result": {
         "kind": "scalar",
         "name": "Void"
@@ -50,10 +235,17 @@
   "rvt-protocol": 1,
   "states": [
     {
-      "name": "counter",
+      "name": "auto-snapshot-minutes",
       "type": {
         "kind": "scalar",
         "name": "Int64"
+      }
+    },
+    {
+      "name": "repo-root",
+      "type": {
+        "kind": "scalar",
+        "name": "String"
       }
     }
   ]

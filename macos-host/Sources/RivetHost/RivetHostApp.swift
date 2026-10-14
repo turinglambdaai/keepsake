@@ -38,10 +38,10 @@ final class AppModel: ObservableObject {
     @Published var status = "Starting embedded Racket CS…"
     @Published var ready = false
 
-    @Published var accounts: [AccountInfo] = []
+    @Published var accounts: [RivetTypes.AccountInfo] = []
     @Published var selectedAccountID: String?
 
-    @Published var snapshots: [SnapshotInfo] = []
+    @Published var snapshots: [RivetTypes.SnapshotInfo] = []
     @Published var selectedSnapshotIndex: Int64?
 
     @Published var busy = false
@@ -50,11 +50,11 @@ final class AppModel: ObservableObject {
     private var backend: EmbeddedRacketBackend?
     private var api: RivetAPI?
 
-    var selectedAccount: AccountInfo? {
+    var selectedAccount: RivetTypes.AccountInfo? {
         accounts.first { $0.id == selectedAccountID }
     }
 
-    var selectedSnapshot: SnapshotInfo? {
+    var selectedSnapshot: RivetTypes.SnapshotInfo? {
         snapshots.first { $0.index == selectedSnapshotIndex }
     }
 

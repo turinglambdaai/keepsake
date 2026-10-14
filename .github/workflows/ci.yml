@@ -12,6 +12,11 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# Single source of truth for the rivet pin; the release workflow pins the
+# same tag so a bump is one edit per file, not a grep-replace across steps.
+env:
+  RIVET_PIN: v0.11.0
+
 jobs:
   test:
     name: Racket engine (${{ matrix.os }})
@@ -22,16 +27,6 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - uses: actions/checkout@v4
-      - name: Check out Rivet
-        uses: actions/checkout@v4
-        with:
-          repository: turinglambdaai/rivet
-          path: rivet
-      - name: Check out Keel
-        uses: actions/checkout@v4
-        with:
-          repository: turinglambdaai/keel
-          path: keel
       - name: Set up Racket CS
         uses: Bogdanp/setup-racket@v1.15
         with:
@@ -45,8 +40,11 @@ jobs:
       - name: Install websocket library
         run: raco pkg install --auto --no-docs websocket
         shell: bash
-      - name: Link Rivet checkout
-        run: raco pkg install --auto --no-docs --link "$GITHUB_WORKSPACE/rivet/rivet" "$GITHUB_WORKSPACE/rivet/rivet-cli" "$GITHUB_WORKSPACE/keel/keel"
+      # Standard package install pinned to rivet's released tag. Keel is a
+      # declared dependency of rivet (>= 0.3.1) and resolves from the package
+      # catalog — no source-tree linking anywhere.
+      - name: Install Rivet
+        run: raco pkg install --auto --no-docs 'https://github.com/turinglambdaai/rivet.git#${{ env.RIVET_PIN }}'
         shell: bash
       - name: Test engine
         run: raco test tests/

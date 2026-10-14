@@ -25,6 +25,7 @@
       <a href="#questions" data-i18n="nav.questions">为什么需要</a>
       <a href="#principles" data-i18n="nav.principles">设计原则</a>
       <a href="#start" data-i18n="nav.start">三步开始</a>
+      <a href="guide.html" data-i18n="nav.guide">手册</a>
       <a href="#download" data-i18n="nav.download">下载</a>
       <a href="https://github.com/turinglambdaai/keepsake" data-i18n="nav.github">GitHub</a>
       <div class="lang-dropdown-wrapper">
@@ -131,19 +132,20 @@
     <h2 data-i18n="download-title">下载</h2>
     <div class="dl-grid">
       <div class="dl-card">
-        <h3 data-i18n="dl-soon-title">早期开发中</h3>
-        <p data-i18n="dl-soon-body">1.0 尚未发布。先从源码构建，或 Watch Releases 等首个安装包：</p>
-        <div class="code">git clone https://github.com/turinglambdaai/keepsake
-cd keepsake && raco pkg install --auto --no-docs crypto
-racket app/cli.rkt discover</div>
-        <a class="btn btn-primary" href="https://github.com/turinglambdaai/keepsake/releases" data-i18n="dl-releases">Releases 页面</a>
+        <h3 data-i18n="dl-v010-title">v0.1.0 — macOS 首发</h3>
+        <p data-i18n="dl-v010-body">需要 macOS 14+。Apple Silicon 选 arm64，Intel 选 x64。未签名公证：首次打开右键点图标，选「打开」。</p>
+        <p class="platform-row">
+          <a class="btn btn-primary" href="https://github.com/turinglambdaai/keepsake/releases/download/v0.1.0/keepsake-0.1.0-macos-arm64.dmg" data-i18n="dl-arm64">下载 arm64 (.dmg)</a>
+          <a class="btn btn-secondary" href="https://github.com/turinglambdaai/keepsake/releases/download/v0.1.0/keepsake-0.1.0-macos-x64.dmg" data-i18n="dl-x64">下载 x64 (.dmg)</a>
+        </p>
+        <p><a class="muted" href="https://github.com/turinglambdaai/keepsake/releases/tag/v0.1.0" data-i18n="dl-all">全部资产（zip、SHA256SUMS）与源码</a></p>
       </div>
       <div class="dl-card">
         <h3 data-i18n="dl-platforms-title">平台</h3>
         <p class="platform-row">
-          <span class="chip ok">macOS</span>
-          <span class="chip ok">Windows</span>
-          <span class="chip ok">Linux</span>
+          <span class="chip ok">macOS 14+</span>
+          <span class="chip">Windows — M2</span>
+          <span class="chip">Linux — M2</span>
         </p>
         <p class="muted" data-i18n="dl-platforms-body">
           手机端被平台沙盒锁住：手机历史通过微信自带的「迁移到电脑」进入桌面端后，再被快照覆盖。
@@ -172,7 +174,7 @@ racket app/cli.rkt discover</div>
   var I18N = {
     en: {
       'nav.questions': 'Why', 'nav.principles': 'Principles', 'nav.start': 'Get started',
-      'nav.download': 'Download', 'nav.github': 'GitHub',
+      'nav.guide': 'Manual', 'nav.download': 'Download', 'nav.github': 'GitHub',
       'kicker': 'file-level backup · zero decryption',
       'hero-title': 'A time machine for your desktop WeChat data.',
       'hero-lede': "WeChat keeps no server-side copy of your chats — your local data folder is the only one that exists. Keepsake snapshots it the way macOS snapshots your disk: deduplicated, versioned, restorable. It handles files, never content.",
@@ -201,9 +203,11 @@ racket app/cli.rkt discover</div>
       's3-title': 'Get anything back',
       's3-body': 'Pick any point on the timeline and restore in place; an automatic safety snapshot runs first, and WeChat itself verifies the result.',
       'download-title': 'Download',
-      'dl-soon-title': 'Early development',
-      'dl-soon-body': '1.0 is not out yet. Build from source for now, or watch Releases for the first installer:',
-      'dl-releases': 'Releases page',
+      'dl-v010-title': 'v0.1.0 — macOS first',
+      'dl-v010-body': 'Requires macOS 14+. Pick arm64 for Apple Silicon, x64 for Intel. Unsigned and not notarized: right-click the icon and choose Open on first launch.',
+      'dl-arm64': 'Download arm64 (.dmg)',
+      'dl-x64': 'Download x64 (.dmg)',
+      'dl-all': 'All assets (zip, SHA256SUMS) and source',
       'dl-platforms-title': 'Platforms',
       'dl-platforms-body': 'Desktop clients keep data in local files — that is Keepsake\u2019s whole world. Phones sandbox WeChat beyond reach: phone history joins the backup through WeChat\u2019s built-in migrate-to-desktop step, then gets snapshotted like everything else.',
       'roadmap-title': 'Roadmap',
@@ -214,7 +218,7 @@ racket app/cli.rkt discover</div>
     },
     zh: {
       'nav.questions': '为什么需要', 'nav.principles': '设计原则', 'nav.start': '三步开始',
-      'nav.download': '下载', 'nav.github': 'GitHub',
+      'nav.guide': '手册', 'nav.download': '下载', 'nav.github': 'GitHub',
       'kicker': '文件级备份 · 零解密',
       'hero-title': '桌面微信数据的时光机。',
       'hero-lede': '微信不在服务器上保存聊天记录——你本地的数据目录就是世上唯一一份。Keepsake 像 macOS 给磁盘拍快照那样给它拍快照：去重、多版本、可恢复。只处理文件，不碰内容。',
@@ -243,9 +247,11 @@ racket app/cli.rkt discover</div>
       's3-title': '随时找回',
       's3-body': '从时间线选任意时点一键恢复；恢复前自动保险，打开微信即可验收。',
       'download-title': '下载',
-      'dl-soon-title': '早期开发中',
-      'dl-soon-body': '1.0 尚未发布。先从源码构建，或 Watch Releases 等首个安装包：',
-      'dl-releases': 'Releases 页面',
+      'dl-v010-title': 'v0.1.0 — macOS 首发',
+      'dl-v010-body': '需要 macOS 14+。Apple Silicon 选 arm64，Intel 选 x64。未签名公证：首次打开右键点图标，选「打开」。',
+      'dl-arm64': '下载 arm64 (.dmg)',
+      'dl-x64': '下载 x64 (.dmg)',
+      'dl-all': '全部资产（zip、SHA256SUMS）与源码',
       'dl-platforms-title': '平台',
       'dl-platforms-body': '手机端被平台沙盒锁住：手机历史通过微信自带的「迁移到电脑」进入桌面端后，再被快照覆盖。',
       'roadmap-title': '路线图',

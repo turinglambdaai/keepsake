@@ -3,7 +3,7 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject private var model: AppModel
 
-    @State private var confirmingRestore: SnapshotInfo?
+    @State private var confirmingRestore: RivetTypes.SnapshotInfo?
 
     var body: some View {
         NavigationSplitView {

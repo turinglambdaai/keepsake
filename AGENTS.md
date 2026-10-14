@@ -49,7 +49,7 @@ racket app/cli.rkt discover                 # 冒烟：找账号（没装微信�
 ## 约定
 
 - README.md（英）与 README.zh-CN.md（中）同步改；网址只出现在语言行 🌐。
-- CHANGELOG.md 保持 Keep-a-Changelog 风格；新栈产品首发 1.0.0。
+- CHANGELOG.md 保持 Keep-a-Changelog 风格；家族政策：rivet 线产品未到 1.0 不进 1.x，首发及后续版本都在 0.x 纪元（首发 v0.1.0）。
 - 平台路径相关改动必须带平台矩阵测试（CI 覆盖 ubuntu/macos/windows）。
 - 引擎不依赖 rivet；M0 壳开工后遵循 Rivet 工作约定（开发前 pull 本地 rivet、清 `compiled/` 再 `raco setup`）。
 - blob 内容寻址逻辑（`app/chunk.rkt`、`app/repo.rkt`）是数据兼容性的根：改动前先读 repo-format.md 的 Compatibility rules 一节。

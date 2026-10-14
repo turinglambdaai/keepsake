@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Keepsake — 使用手册</title>
+<meta name="description" content="Keepsake 使用手册：安装、首份快照、时间线浏览、校验、恢复、空间回收与自托管 hub。">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .manual-hero { padding: 56px 0 8px; }
+  .eyebrow { color: var(--accent); font-weight: 600; font-size: 14px; letter-spacing: .06em; text-transform: uppercase; }
+  .manual-layout { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 36px; padding: 28px 0 48px; }
+  .manual-toc { position: sticky; top: 24px; align-self: start; font-size: 14px; }
+  .manual-toc-group { font-weight: 700; margin: 18px 0 6px; }
+  .manual-toc a { display: block; color: var(--muted); text-decoration: none; padding: 3px 0; }
+  .manual-toc a:hover { color: var(--accent); }
+  .manual-section { padding: 28px 0 6px; border-top: 1px solid var(--line); }
+  .manual-section:first-of-type { border-top: none; }
+  .manual-section h2 { font-size: 22px; margin: 0 0 14px; display: flex; align-items: center; gap: 10px; }
+  .h2-emoji { font-size: 20px; }
+  .manual-section h3 { font-size: 17px; margin: 22px 0 8px; }
+  .manual-section p { color: var(--muted); margin: 0 0 12px; }
+  .manual-section ol { padding-left: 22px; margin: 0 0 12px; }
+  .manual-section ol li { margin: 10px 0; color: var(--muted); }
+  .manual-hint { font-size: 13px; color: var(--muted); }
+  .callout { border: 1px solid var(--accent); background: var(--accent-soft); border-radius: var(--radius); padding: 14px 18px; margin: 14px 0; color: var(--ink); font-size: 15px; }
+  .callout-title { font-weight: 700; margin-bottom: 4px; }
+  .faq { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); padding: 0 18px; margin: 10px 0; }
+  .faq summary { cursor: pointer; padding: 14px 0; font-weight: 600; list-style: none; position: relative; padding-right: 28px; }
+  .faq summary::after { content: "+"; position: absolute; right: 4px; color: var(--accent); font-weight: 700; }
+  .faq[open] summary::after { content: "–"; }
+  .faq .faq-body { padding: 0 0 14px; color: var(--muted); }
+  .manual-section .code { margin: 10px 0 16px; }
+  @media (max-width: 760px) {
+    .manual-layout { grid-template-columns: 1fr; }
+    .manual-toc { position: static; border-bottom: 1px solid var(--line); padding-bottom: 14px; }
+  }
+</style>
+<script>
+  (function () {
+    var t = localStorage.getItem('keepsake-theme');
+    if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    document.documentElement.dataset.theme = t;
+    var l = localStorage.getItem('keepsake-lang');
+    if (!l) l = (navigator.language || 'zh').toLowerCase().startsWith('zh') ? 'zh' : 'en';
+    document.documentElement.lang = l === 'zh' ? 'zh-CN' : 'en';
+  })();
+</script>
+</head>
+<body>
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="index.html">Keepsake</a>
+    <nav class="nav-links">
+      <a href="index.html#questions" data-i18n="nav.questions">为什么需要</a>
+      <a href="guide.html" data-i18n="nav.guide">手册</a>
+      <a href="index.html#download" data-i18n="nav.download">下载</a>
+      <a href="https://github.com/turinglambdaai/keepsake" data-i18n="nav.github">GitHub</a>
+      <div class="lang-dropdown-wrapper">
+        <button class="lang-btn" type="button" aria-label="Switch language">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+          <span id="current-lang-label">English</span>
+        </button>
+        <ul class="lang-menu">
+          <li onclick="setLanguage('en')">English</li>
+          <li onclick="setLanguage('zh')">简体中文</li>
+        </ul>
+      </div>
+      <button class="theme-btn" id="theme-btn" aria-label="Toggle theme">◐</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="manual-hero">
+    <span class="eyebrow" data-i18n="g-eyebrow">使用手册</span>
+    <h1 data-i18n="g-title">Keepsake 能做的事。</h1>
+    <p class="lede" data-i18n="g-lede">安装、首份快照、时间线、校验、恢复与自托管 hub——一处说清。句子短，直接做。</p>
+  </section>
+
+  <div class="manual-layout">
+    <aside class="manual-toc">
+      <div class="manual-toc-group" data-i18n="g-toc-start">上手</div>
+      <a href="#quickstart" data-i18n="g-nav-quickstart">五分钟上手</a>
+      <div class="manual-toc-group" data-i18n="g-toc-core">核心功能</div>
+      <a href="#snapshots" data-i18n="g-nav-snapshots">快照与自动快照</a>
+      <a href="#dedup" data-i18n="g-nav-dedup">去重</a>
+      <a href="#timeline" data-i18n="g-nav-timeline">时间线浏览</a>
+      <a href="#verify" data-i18n="g-nav-verify">校验</a>
+      <a href="#restore" data-i18n="g-nav-restore">恢复</a>
+      <a href="#gc" data-i18n="g-nav-gc">空间回收</a>
+      <div class="manual-toc-group" data-i18n="g-toc-advanced">进阶</div>
+      <a href="#hub" data-i18n="g-nav-hub">自托管 Hub</a>
+      <div class="manual-toc-group" data-i18n="g-toc-faq">疑问</div>
+      <a href="#faq" data-i18n="g-nav-faq">常见问题</a>
+    </aside>
+
+    <main>
+      <!-- =================== Quick start =================== -->
+      <section class="manual-section" id="quickstart">
+        <h2><span class="h2-emoji">🚀</span><span data-i18n="g-qs-title">五分钟上手</span></h2>
+        <p data-i18n="g-qs-intro">下载、打开、拍第一份快照。教程到这里就结束了——本页其余内容都是可选的。</p>
+        <ol>
+          <li data-i18n="g-qs-1">安装。到 Releases 页下载 keepsake-0.1.0-macos-arm64.dmg（Apple Silicon）或 keepsake-0.1.0-macos-x64.dmg（Intel）。把 Keepsake 拖进「应用程序」。v0.1.0 未签名公证：首次打开请右键点图标，选「打开」，再点一次「打开」。</li>
+          <li data-i18n="g-qs-2">给一次完全磁盘访问。微信把数据存在受保护目录里，首次快照时 macOS 会弹窗。到「系统设置 → 隐私与安全性 → 完全磁盘访问权限」勾选 Keepsake，重启应用。放心：Keepsake 对微信目录只读，写入只发生在备份仓库。</li>
+          <li data-i18n="g-qs-3">拍第一份快照。左侧选中一个微信账号，点「Snapshot Now」。第一次是全量入库，会慢；之后每次近乎瞬时。</li>
+          <li data-i18n="g-qs-4">浏览时间线。每份快照一行：何时、多少文件、多大。按设备分列，永远是一笔明账。</li>
+          <li data-i18n="g-qs-5">做一次恢复演练。选一份旧快照，点「Restore」，确认。恢复开始前，Keepsake 自动先给当前数据拍一份保险快照。恢复完，打开微信本体验收。真出事的那天，你已经练过一遍。</li>
+        </ol>
+        <p class="manual-hint" data-i18n="g-qs-hint">偏好命令行？引擎同款能力在 racket app/cli.rkt：discover / snapshot / status / restore。</p>
+      </section>
+
+      <!-- =================== Core: snapshots =================== -->
+      <section class="manual-section" id="snapshots">
+        <h2><span class="h2-emoji">📸</span><span data-i18n="g-snap-title">快照与自动快照</span></h2>
+        <p data-i18n="g-snap-body">点「Snapshot Now」随手拍一份。想无人值守：把「Auto snapshot」拨到每 15 分钟、每小时、每 6 小时或每天，默认关闭。调度判断是纯函数，逐条测试覆盖。</p>
+      </section>
+
+      <!-- =================== Core: dedup =================== -->
+      <section class="manual-section" id="dedup">
+        <h2><span class="h2-emoji">🧬</span><span data-i18n="g-dedup-title">去重</span></h2>
+        <p data-i18n="g-dedup-body">仓库按内容寻址：媒体按整个文件去重，消息库（SQLite）按页去重，页大小从文件头读取。第一个快照是全量，之后每份只新增变化过的块——用几年也不会翻倍占盘。</p>
+      </section>
+
+      <!-- =================== Core: timeline =================== -->
+      <section class="manual-section" id="timeline">
+        <h2><span class="h2-emoji">🕘</span><span data-i18n="g-timeline-title">时间线浏览</span></h2>
+        <p data-i18n="g-timeline-body">左侧选账号，右侧是它的全部快照。每行写明何时、多少文件、总大小。任意一行都可以恢复；没有任何黑箱。</p>
+      </section>
+
+      <!-- =================== Core: verify =================== -->
+      <section class="manual-section" id="verify">
+        <h2><span class="h2-emoji">✅</span><span data-i18n="g-verify-title">校验</span></h2>
+        <p data-i18n="g-verify-body">怀疑备份坏了？跑一次 verify：逐份审计 manifest，重新哈希每一个被引用的 blob，坏一块报一块，报到名字。仓库是纯目录，校验不依赖 hub 活着，也不依赖 Keepsake 本体。</p>
+      </section>
+
+      <!-- =================== Core: restore =================== -->
+      <section class="manual-section" id="restore">
+        <h2><span class="h2-emoji">↩️</span><span data-i18n="g-restore-title">恢复</span></h2>
+        <p data-i18n="g-restore-body">选快照，点「Restore」，确认。执行分两阶段：先逐一预检所有 blob，再碰你的目录；写完再核对每个文件的大小。权限与修改时间一并还原。恢复永远以保险快照开场——不会越恢复越糟。</p>
+        <div class="callout">
+          <div class="callout-title" data-i18n="g-restore-co-title">⚠️ 恢复会覆盖同路径文件</div>
+          <span data-i18n="g-restore-co-body">恢复把选定快照原位铺回账号目录。动手前的保险快照保住现状；对结果不满意，就恢复那份保险快照。</span>
+        </div>
+      </section>
+
+      <!-- =================== Core: gc =================== -->
+      <section class="manual-section" id="gc">
+        <h2><span class="h2-emoji">🧹</span><span data-i18n="g-gc-title">空间回收</span></h2>
+        <p data-i18n="g-gc-body">删旧快照不会立刻腾出空间——还被引用的块永远保留。GC 工具清走超过宽限期的无引用块；宽限期保护正在写入的快照，绝不误删在途数据。</p>
+      </section>
+
+      <!-- =================== Hub =================== -->
+      <section class="manual-section" id="hub">
+        <h2><span class="h2-emoji">🛰️</span><span data-i18n="g-hub-title">自托管 Hub</span></h2>
+        <h3 data-i18n="g-hub-what-title">是什么</h3>
+        <p data-i18n="g-hub-what">仓库目录上的一层 HTTP 门面：多台电脑把快照推进同一个仓库，浏览器打开就能看所有设备的时间线和仓库大小。带令牌认证，路径穿越一律拒绝。格式与本地卷完全相同——hub 不是另一种存储。</p>
+        <h3 data-i18n="g-hub-who-title">谁需要</h3>
+        <p data-i18n="g-hub-who">一台电脑用不到它：直接写本地盘或 NAS 挂载即可。有两台以上机器、想把备份集中到家庭服务器的人，才需要 hub。它永远不是单点——agent 随时可以退回目录直写。</p>
+        <h3 data-i18n="g-hub-docker-title">Docker 一句话</h3>
+        <div class="code">docker build -t keepsake-hub hub/
+docker run -d -p 8080:8080 -p 8081:8081 \
+  -v /mnt/user/keepsake:/data \
+  -e KEEPSAKE_HUB_TOKEN=change-me keepsake-hub</div>
+        <h3 data-i18n="g-hub-license-title">试用与激活</h3>
+        <p data-i18n="g-hub-license">hub 按 MT Photos 式的诚实方案计费：自仓库创建日起 30 天全功能试用，KS1 激活令牌离线验证。过期后拒绝新写入（HTTP 402），读取与恢复永远免费——数据不会被扣住，agent 会自动改走目录直写。</p>
+        <div class="callout">
+          <div class="callout-title" data-i18n="g-hub-m2-title">🚧 诚实标注（v0.1.0）</div>
+          <span data-i18n="g-hub-m2-body">官方签名 Docker 镜像尚未发布（M2 里程碑）。上面的镜像需要你从源码构建；安装器签名与公证同样在 M2。</span>
+        </div>
+      </section>
+
+      <!-- =================== FAQ =================== -->
+      <section class="manual-section" id="faq">
+        <h2><span class="h2-emoji">❓</span><span data-i18n="g-faq-title">常见问题</span></h2>
+
+        <details class="faq">
+          <summary data-i18n="g-faq-q1">我的聊天记录会被解密吗？</summary>
+          <div class="faq-body" data-i18n="g-faq-a1">不会。Keepsake 不提取密钥、不解密数据库、不注入微信进程。它只复制文件，像 Time Machine 复制磁盘那样。查看与搜索记录，都打开微信本体。这条线写进产品定义，永不跨越。</div>
+        </details>
+
+        <details class="faq">
+          <summary data-i18n="g-faq-q2">数据存在哪？</summary>
+          <div class="faq-body" data-i18n="g-faq-a2">默认在 ~/KeepsakeBackup，应用内可以改到任何位置：外置硬盘、NAS（SMB 挂载）或自托管 hub。仓库是明文目录——JSON manifest 加按 SHA-256 命名的 blob。就算 Keepsake 明天消失，jq 和 cp 也能拼回任何一份快照。</div>
+        </details>
+
+        <details class="faq">
+          <summary data-i18n="g-faq-q3">要注册账号吗？有联网吗？</summary>
+          <div class="faq-body" data-i18n="g-faq-a3">不用账号，默认不联网。快照落在你指定的本地卷；只有你主动启用自托管 hub 时，数据才流向你自己的服务器。没有遥测，没有云端。</div>
+        </details>
+
+        <details class="faq">
+          <summary data-i18n="g-faq-q4">支持 Windows / Linux 吗？</summary>
+          <div class="faq-body" data-i18n="g-faq-a4">v0.1.0 是 macOS 首发（14.0+，Apple Silicon 与 Intel）。Windows 与 Linux 排在 M2。手机端被平台沙盒锁住：手机历史先用微信自带的「迁移到电脑」进入桌面端，之后照常快照。</div>
+        </details>
+
+        <details class="faq">
+          <summary data-i18n="g-faq-q5">怎么更新？</summary>
+          <div class="faq-body" data-i18n="g-faq-a5">手动。v0.1.0 没有自动更新器：到 Releases 页下载新 dmg，覆盖安装。仓库格式向前兼容，旧备份照常打开。</div>
+        </details>
+
+        <details class="faq">
+          <summary data-i18n="g-faq-q6">怎么卸载？</summary>
+          <div class="faq-body" data-i18n="g-faq-a6">退出应用，把「应用程序」里的 Keepsake 拖进废纸篓。想连备份一起删：先确认不再需要，再删掉仓库目录（默认 ~/KeepsakeBackup）。那是你唯一的多版本副本，删之前想两次。</div>
+        </details>
+      </section>
+    </main>
+  </div>
+</main>
+
+<footer>
+  <span>MIT License · <a href="https://github.com/turinglambdaai/keepsake">github.com/turinglambdaai/keepsake</a></span>
+  <span data-i18n="footer-note">Keepsake 是独立工具，与腾讯无关、未获其认可。WeChat 是腾讯的商标。</span>
+</footer>
+
+<script>
+(function () {
+  var I18N = {
+    en: {
+      'nav.questions': 'Why', 'nav.guide': 'Manual', 'nav.download': 'Download', 'nav.github': 'GitHub',
+      'g-eyebrow': 'User Manual',
+      'g-title': 'Everything Keepsake can do.',
+      'g-lede': 'Install, first snapshot, timeline, verify, restore, and the self-hosted hub — in one place. Short sentences, straight to the act.',
+      'g-toc-start': 'Get started', 'g-nav-quickstart': 'Five-minute start',
+      'g-toc-core': 'Core', 'g-nav-snapshots': 'Snapshots & auto', 'g-nav-dedup': 'Dedup',
+      'g-nav-timeline': 'Timeline', 'g-nav-verify': 'Verify', 'g-nav-restore': 'Restore', 'g-nav-gc': 'Space (GC)',
+      'g-toc-advanced': 'Advanced', 'g-nav-hub': 'Self-hosted hub',
+      'g-toc-faq': 'Questions', 'g-nav-faq': 'FAQ',
+      'g-qs-title': 'Five-minute start',
+      'g-qs-intro': "Download, open, take the first snapshot. That's the whole tutorial — everything else on this page is optional.",
+      'g-qs-1': "Install. Download keepsake-0.1.0-macos-arm64.dmg (Apple Silicon) or keepsake-0.1.0-macos-x64.dmg (Intel) from the Releases page. Drag Keepsake into Applications. v0.1.0 is unsigned: right-click the icon, choose Open, then Open again.",
+      'g-qs-2': "Grant Full Disk Access once. WeChat stores data in protected folders; macOS will prompt on the first snapshot. Open System Settings → Privacy & Security → Full Disk Access, check Keepsake, relaunch the app. Rest easy: Keepsake reads your WeChat folders only — writes go to the backup repository alone.",
+      'g-qs-3': 'Take the first snapshot. Select a WeChat account on the left and click "Snapshot Now". The first run ingests everything and takes a while; every later one finishes almost instantly.',
+      'g-qs-4': 'Browse the timeline. Each snapshot is one row: when, how many files, how large. Grouped per device — a ledger, never a black box.',
+      'g-qs-5': 'Do one restore drill. Pick an older snapshot, click "Restore", confirm. Before anything is touched, Keepsake takes a safety snapshot of the current data. Open WeChat itself to verify. Practice before the day you need it.',
+      'g-qs-hint': 'Prefer the terminal? The same engine lives in racket app/cli.rkt: discover / snapshot / status / restore.',
+      'g-snap-title': 'Snapshots & auto-snapshot',
+      'g-snap-body': 'Click "Snapshot Now" whenever you like. For hands-off backups, set "Auto snapshot" to every 15 minutes, hourly, every 6 hours, or daily — off by default. The scheduling decision is a pure function, unit-tested line by line.',
+      'g-dedup-title': 'Dedup',
+      'g-dedup-body': 'The repository is content-addressed: media dedupes whole-file, message stores (SQLite) dedupe page-by-page, with the page size read from the file header. The first snapshot is full; every later one adds only changed chunks — years of use will not double the disk.',
+      'g-timeline-title': 'Timeline',
+      'g-timeline-body': 'Pick an account on the left; see all of its snapshots on the right. Each row states when, how many files, how large. Any row can be restored. No black boxes.',
+      'g-verify-title': 'Verify',
+      'g-verify-body': 'Worried a backup went bad? Run verify: it audits every manifest and re-hashes every referenced blob, reporting corruption by name. The repository is a plain directory — verification needs neither the hub nor Keepsake itself.',
+      'g-restore-title': 'Restore',
+      'g-restore-body': 'Pick a snapshot, click "Restore", confirm. Execution is two-phase: every blob is pre-checked before your folders are touched, and written sizes are verified afterwards. Permissions and mtimes come back too. Every restore opens with a safety snapshot — it can never make things worse.',
+      'g-restore-co-title': '⚠️ Restore overwrites files at the same paths',
+      'g-restore-co-body': 'A restore lays the chosen snapshot back over the account folder. The safety snapshot preserves the present state; if you dislike the result, restore that one.',
+      'g-gc-title': 'Space (GC)',
+      'g-gc-body': 'Deleting old snapshots does not free space immediately — blobs still referenced are kept forever. The GC tool sweeps unreferenced blobs past a grace window; the grace window protects snapshots being written, so in-flight data is never deleted.',
+      'g-hub-title': 'Self-hosted hub',
+      'g-hub-what-title': 'What it is',
+      'g-hub-what': 'A thin HTTP facade over the repository directory: several computers push snapshots into one repository, and a browser shows every device\u2019s timeline plus repository size. Bearer-token auth, path-traversal rejected. The format is identical to local volumes — the hub is not another storage.',
+      'g-hub-who-title': 'Who needs it',
+      'g-hub-who': 'One machine does not: write straight to a local disk or an NAS mount. You need the hub when two or more machines should converge on a home server. It is never a single point — agents can always fall back to directory writes.',
+      'g-hub-docker-title': 'Docker in one breath',
+      'g-hub-license-title': 'Trial & activation',
+      'g-hub-license': 'The hub follows the MT Photos-style honesty scheme: 30 fully-featured days from the repository\u2019s creation stamp, KS1 activation tokens verified fully offline. After expiry it refuses new writes (HTTP 402); reads and restores stay free forever — your data is never held hostage, and agents fail over to directory writes.',
+      'g-hub-m2-title': '🚧 Honest note (v0.1.0)',
+      'g-hub-m2-body': 'No officially signed Docker image yet (that is the M2 milestone). Build the image from source as shown; installer signing and notarization are also M2.',
+      'g-faq-title': 'FAQ',
+      'g-faq-q1': 'Will my chats be decrypted?',
+      'g-faq-a1': 'No. Keepsake extracts no keys, decrypts no databases, and never touches the WeChat process. It copies files, the way Time Machine copies a disk. Reading and searching happen in WeChat itself. The line is part of the product definition and is never crossed.',
+      'g-faq-q2': 'Where does my data live?',
+      'g-faq-a2': 'In ~/KeepsakeBackup by default; point it anywhere in the app — an external drive, an NAS (SMB mount), or a self-hosted hub. The repository is a plain directory: JSON manifests plus blobs named by SHA-256. If Keepsake vanished tomorrow, jq and cp could rebuild any snapshot.',
+      'g-faq-q3': 'Is there an account? Does it phone home?',
+      'g-faq-a3': 'No account, and no network by default. Snapshots land on the local volume you chose; data flows only when you opt into your own self-hosted hub. No telemetry, no cloud.',
+      'g-faq-q4': 'Windows / Linux?',
+      'g-faq-a4': 'v0.1.0 is macOS-first (14.0+, Apple Silicon and Intel). Windows and Linux are M2. Phones are sandboxed beyond reach: migrate phone history with WeChat\u2019s built-in migrate-to-desktop step, and it gets snapshotted like everything else.',
+      'g-faq-q5': 'How do I update?',
+      'g-faq-a5': 'Manually. v0.1.0 ships no auto-updater: download the new dmg from the Releases page and install over the old one. The repository format is forward-compatible; existing backups open as usual.',
+      'g-faq-q6': 'How do I uninstall?',
+      'g-faq-a6': 'Quit the app and drag Keepsake from Applications to the Trash. To remove the backups too: be sure first, then delete the repository folder (default ~/KeepsakeBackup). It is your only multi-version copy — think twice.',
+      'footer-note': 'Keepsake is an independent tool. It is not affiliated with or endorsed by Tencent. WeChat is a trademark of Tencent.'
+    },
+    zh: {
+      'nav.questions': '为什么需要', 'nav.guide': '手册', 'nav.download': '下载', 'nav.github': 'GitHub',
+      'g-eyebrow': '使用手册',
+      'g-title': 'Keepsake 能做的事。',
+      'g-lede': '安装、首份快照、时间线、校验、恢复与自托管 hub——一处说清。句子短，直接做。',
+      'g-toc-start': '上手', 'g-nav-quickstart': '五分钟上手',
+      'g-toc-core': '核心功能', 'g-nav-snapshots': '快照与自动快照', 'g-nav-dedup': '去重',
+      'g-nav-timeline': '时间线浏览', 'g-nav-verify': '校验', 'g-nav-restore': '恢复', 'g-nav-gc': '空间回收',
+      'g-toc-advanced': '进阶', 'g-nav-hub': '自托管 Hub',
+      'g-toc-faq': '疑问', 'g-nav-faq': '常见问题',
+      'g-qs-title': '五分钟上手',
+      'g-qs-intro': '下载、打开、拍第一份快照。教程到这里就结束了——本页其余内容都是可选的。',
+      'g-qs-1': '安装。到 Releases 页下载 keepsake-0.1.0-macos-arm64.dmg（Apple Silicon）或 keepsake-0.1.0-macos-x64.dmg（Intel）。把 Keepsake 拖进「应用程序」。v0.1.0 未签名公证：首次打开请右键点图标，选「打开」，再点一次「打开」。',
+      'g-qs-2': '给一次完全磁盘访问。微信把数据存在受保护目录里，首次快照时 macOS 会弹窗。到「系统设置 → 隐私与安全性 → 完全磁盘访问权限」勾选 Keepsake，重启应用。放心：Keepsake 对微信目录只读，写入只发生在备份仓库。',
+      'g-qs-3': '拍第一份快照。左侧选中一个微信账号，点「Snapshot Now」。第一次是全量入库，会慢；之后每次近乎瞬时。',
+      'g-qs-4': '浏览时间线。每份快照一行：何时、多少文件、多大。按设备分列，永远是一笔明账。',
+      'g-qs-5': '做一次恢复演练。选一份旧快照，点「Restore」，确认。恢复开始前，Keepsake 自动先给当前数据拍一份保险快照。恢复完，打开微信本体验收。真出事的那天，你已经练过一遍。',
+      'g-qs-hint': '偏好命令行？引擎同款能力在 racket app/cli.rkt：discover / snapshot / status / restore。',
+      'g-snap-title': '快照与自动快照',
+      'g-snap-body': '点「Snapshot Now」随手拍一份。想无人值守：把「Auto snapshot」拨到每 15 分钟、每小时、每 6 小时或每天，默认关闭。调度判断是纯函数，逐条测试覆盖。',
+      'g-dedup-title': '去重',
+      'g-dedup-body': '仓库按内容寻址：媒体按整个文件去重，消息库（SQLite）按页去重，页大小从文件头读取。第一个快照是全量，之后每份只新增变化过的块——用几年也不会翻倍占盘。',
+      'g-timeline-title': '时间线浏览',
+      'g-timeline-body': '左侧选账号，右侧是它的全部快照。每行写明何时、多少文件、总大小。任意一行都可以恢复；没有任何黑箱。',
+      'g-verify-title': '校验',
+      'g-verify-body': '怀疑备份坏了？跑一次 verify：逐份审计 manifest，重新哈希每一个被引用的 blob，坏一块报一块，报到名字。仓库是纯目录，校验不依赖 hub 活着，也不依赖 Keepsake 本体。',
+      'g-restore-title': '恢复',
+      'g-restore-body': '选快照，点「Restore」，确认。执行分两阶段：先逐一预检所有 blob，再碰你的目录；写完再核对每个文件的大小。权限与修改时间一并还原。恢复永远以保险快照开场——不会越恢复越糟。',
+      'g-restore-co-title': '⚠️ 恢复会覆盖同路径文件',
+      'g-restore-co-body': '恢复把选定快照原位铺回账号目录。动手前的保险快照保住现状；对结果不满意，就恢复那份保险快照。',
+      'g-gc-title': '空间回收',
+      'g-gc-body': '删旧快照不会立刻腾出空间——还被引用的块永远保留。GC 工具清走超过宽限期的无引用块；宽限期保护正在写入的快照，绝不误删在途数据。',
+      'g-hub-title': '自托管 Hub',
+      'g-hub-what-title': '是什么',
+      'g-hub-what': '仓库目录上的一层 HTTP 门面：多台电脑把快照推进同一个仓库，浏览器打开就能看所有设备的时间线和仓库大小。带令牌认证，路径穿越一律拒绝。格式与本地卷完全相同——hub 不是另一种存储。',
+      'g-hub-who-title': '谁需要',
+      'g-hub-who': '一台电脑用不到它：直接写本地盘或 NAS 挂载即可。有两台以上机器、想把备份集中到家庭服务器的人，才需要 hub。它永远不是单点——agent 随时可以退回目录直写。',
+      'g-hub-docker-title': 'Docker 一句话',
+      'g-hub-license-title': '试用与激活',
+      'g-hub-license': 'hub 按 MT Photos 式的诚实方案计费：自仓库创建日起 30 天全功能试用，KS1 激活令牌离线验证。过期后拒绝新写入（HTTP 402），读取与恢复永远免费——数据不会被扣住，agent 会自动改走目录直写。',
+      'g-hub-m2-title': '🚧 诚实标注（v0.1.0）',
+      'g-hub-m2-body': '官方签名 Docker 镜像尚未发布（M2 里程碑）。上面的镜像需要你从源码构建；安装器签名与公证同样在 M2。',
+      'g-faq-title': '常见问题',
+      'g-faq-q1': '我的聊天记录会被解密吗？',
+      'g-faq-a1': '不会。Keepsake 不提取密钥、不解密数据库、不注入微信进程。它只复制文件，像 Time Machine 复制磁盘那样。查看与搜索记录，都打开微信本体。这条线写进产品定义，永不跨越。',
+      'g-faq-q2': '数据存在哪？',
+      'g-faq-a2': '默认在 ~/KeepsakeBackup，应用内可以改到任何位置：外置硬盘、NAS（SMB 挂载）或自托管 hub。仓库是明文目录——JSON manifest 加按 SHA-256 命名的 blob。就算 Keepsake 明天消失，jq 和 cp 也能拼回任何一份快照。',
+      'g-faq-q3': '要注册账号吗？有联网吗？',
+      'g-faq-a3': '不用账号，默认不联网。快照落在你指定的本地卷；只有你主动启用自托管 hub 时，数据才流向你自己的服务器。没有遥测，没有云端。',
+      'g-faq-q4': '支持 Windows / Linux 吗？',
+      'g-faq-a4': 'v0.1.0 是 macOS 首发（14.0+，Apple Silicon 与 Intel）。Windows 与 Linux 排在 M2。手机端被平台沙盒锁住：手机历史先用微信自带的「迁移到电脑」进入桌面端，之后照常快照。',
+      'g-faq-q5': '怎么更新？',
+      'g-faq-a5': '手动。v0.1.0 没有自动更新器：到 Releases 页下载新 dmg，覆盖安装。仓库格式向前兼容，旧备份照常打开。',
+      'g-faq-q6': '怎么卸载？',
+      'g-faq-a6': '退出应用，把「应用程序」里的 Keepsake 拖进废纸篓。想连备份一起删：先确认不再需要，再删掉仓库目录（默认 ~/KeepsakeBackup）。那是你唯一的多版本副本，删之前想两次。',
+      'footer-note': 'Keepsake 是独立工具，与腾讯无关、未获其认可。WeChat 是腾讯的商标。'
+    }
+  };
+
+  function setLang(lang) {
+    document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+    var dict = I18N[lang];
+    document.querySelectorAll('[data-i18n]').forEach(function (el) {
+      var key = el.getAttribute('data-i18n');
+      if (dict[key]) el.textContent = dict[key];
+    });
+    document.getElementById('current-lang-label').textContent = lang === 'zh' ? '简体中文' : 'English';
+    localStorage.setItem('keepsake-lang', lang);
+  }
+
+  window.setLanguage = setLang;
+
+  document.querySelector('.lang-btn').addEventListener('click', function () {
+    var menu = document.querySelector('.lang-menu');
+    menu.classList.toggle('open');
+  });
+
+  document.getElementById('theme-btn').addEventListener('click', function () {
+    var next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = next;
+    localStorage.setItem('keepsake-theme', next);
+  });
+
+  setLang(document.documentElement.lang === 'zh-CN' ? 'zh' : 'en');
+})();
+</script>
+</body>
+</html>

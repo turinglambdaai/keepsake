@@ -1,0 +1,102 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+# Single source of truth for the rivet pin; ci.yml pins the same tag so a
+# bump is one edit per file, not a grep-replace across steps.
+env:
+  RIVET_PIN: v0.11.0
+
+jobs:
+  macos:
+    name: macOS (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { arch: arm64, runner: macos-latest, racket-arch: arm64 }
+          - { arch: x64, runner: macos-15-intel, racket-arch: x64 }
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Racket CS
+        uses: Bogdanp/setup-racket@v1.15
+        with:
+          architecture: ${{ matrix.racket-arch }}
+          distribution: full
+          variant: CS
+          version: '9.3'
+      - name: Install Rivet (keel resolves via its dependency closure)
+        run: raco pkg install --auto --no-docs 'https://github.com/turinglambdaai/rivet.git#${{ env.RIVET_PIN }}'
+      - name: Install crypto (engine dependency)
+        run: raco pkg install --auto --no-docs crypto
+      - name: Version preflight (rivet.rktd == tag)
+        run: |
+          set -euo pipefail
+          VERSION="${GITHUB_REF_NAME#v}"
+          grep -q "(version . \"${VERSION}\")" rivet.rktd
+      # DMG (human installer) + portable zip, launch smoke included.
+      # --development: no codesigning/notarization yet (v0.1.0 ships
+      # unsigned; Gatekeeper right-click override is in the manual).
+      - name: Release (DMG + portable zip)
+        run: raco rivet release --without-updates --development
+      - name: Family naming + checksums
+        run: |
+          set -euo pipefail
+          VERSION="${GITHUB_REF_NAME#v}"
+          ARCH="${{ matrix.arch }}"
+          cd dist
+          # rivet names the portable zip in family form already; only the
+          # DMG lacks the architecture.
+          mv "keepsake-${VERSION}-macos.dmg" "keepsake-${VERSION}-macos-${ARCH}.dmg"
+          # SBOM/notices stay in the CI artifact only — a sidecar without
+          # its body on the release is a dangling reference. Checksum what
+          # we upload.
+          for f in keepsake-*.dmg keepsake-*.zip; do
+            [ -f "$f.sha256" ] || shasum -a 256 "$f" > "$f.sha256"
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-${{ matrix.arch }}
+          path: dist/keepsake-*
+
+  publish:
+    name: Publish
+    needs: [macos]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Gather + publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          VERSION="${GITHUB_REF_NAME#v}"
+          mkdir -p dist
+          for a in macos-arm64 macos-x64; do
+            cp -R "artifacts/$a/." dist/
+          done
+          awk -v header="## [${VERSION}]" '
+            index($0, header) == 1 {on=1; next}
+            on && /^## / {exit}
+            on {print}
+          ' CHANGELOG.md > /tmp/notes.md
+          cd dist
+          cat *.sha256 > SHA256SUMS
+          gh release create "$GITHUB_REF_NAME" \
+            --title "Keepsake ${VERSION}" \
+            --notes-file /tmp/notes.md \
+            --latest \
+            *.dmg *.zip *.sha256 SHA256SUMS
